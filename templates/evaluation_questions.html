@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">{{ evaluation.title }}</h1>
+            <p class="text-muted">Total Marks: <strong>{{ evaluation.total_marks }}</strong> | Questions: <strong>{{ questions|length }}</strong></p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary btn-lg me-2" data-bs-toggle="modal" data-bs-target="#aiGenerateModal">
+                <i class="fas fa-robot"></i> Generate with AI
+            </button>
+            <a href="{{ url_for('add_question', eval_id=evaluation.id) }}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus"></i> Add Question
+            </a>
+        </div>
+    </div>
+
+    {% if questions %}
+        <div class="card shadow-lg">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Questions</h5>
+            </div>
+            <div class="card-body">
+                {% for question in questions %}
+                <div class="card mb-3 border-left-4" style="border-left: 4px solid #17a2b8;">
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-8">
+                                <h6 class="card-title">Q{{ question.order }}. {{ question.question_text }}</h6>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-primary">{{ question.marks }} marks</span>
+                            </div>
+                        </div>
+
+                        <div class="options mb-3 ms-3">
+                            <p class="mb-1"><strong>a)</strong> {{ question.option_a }} {% if question.correct_answer == 'a' %}<span class="badge bg-success">✓ Correct</span>{% endif %}</p>
+                            <p class="mb-1"><strong>b)</strong> {{ question.option_b }} {% if question.correct_answer == 'b' %}<span class="badge bg-success">✓ Correct</span>{% endif %}</p>
+                            <p class="mb-1"><strong>c)</strong> {{ question.option_c }} {% if question.correct_answer == 'c' %}<span class="badge bg-success">✓ Correct</span>{% endif %}</p>
+                            <p class="mb-1"><strong>d)</strong> {{ question.option_d }} {% if question.correct_answer == 'd' %}<span class="badge bg-success">✓ Correct</span>{% endif %}</p>
+                        </div>
+
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('edit_question', eval_id=evaluation.id, q_id=question.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_question', eval_id=evaluation.id, q_id=question.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this question?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            <h4 class="alert-heading">No Questions Yet</h4>
+            <p>Use the buttons above to generate questions with AI or add them manually.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ url_for('edit_evaluation', eval_id=evaluation.id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-edit"></i> Edit Evaluation Details
+        </a>
+        <a href="{{ url_for('admin_evaluations') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to All Evaluations
+        </a>
+    </div>
+</div>
+
+<!-- AI Generation Modal -->
+<div class="modal fade" id="aiGenerateModal" tabindex="-1" aria-labelledby="aiGenerateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="aiGenerateModalLabel"><i class="fas fa-robot"></i> Generate Questions with AI</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('generate_ai_questions', eval_id=evaluation.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% if evaluation.source_file %}
+                    <div class="mb-4 p-3 bg-primary bg-opacity-10 rounded border border-primary">
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-file-pdf"></i> Original Notes Found</label>
+                        <p class="small text-muted mb-3">You uploaded a document when creating this evaluation. Would you like to generate more questions from it?</p>
+                        <button type="submit" name="use_original" value="true" class="btn btn-primary w-100">
+                            <i class="fas fa-magic"></i> Generate from Original Notes
+                        </button>
+                    </div>
+                    <div class="text-center my-3">
+                        <span class="badge bg-secondary">OR UPLOAD NEW</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4 p-3 bg-light rounded border">
+                        <label for="ai_pdf" class="form-label fw-bold"><i class="fas fa-file-pdf"></i> Option 1: Upload a New PDF</label>
+                        <input type="file" class="form-control" id="ai_pdf" name="ai_pdf" accept=".pdf">
+                        <div class="form-text">Generate questions from a new document.</div>
+                    </div>
+                    
+                    <div class="text-center my-3">
+                        <span class="badge bg-secondary">OR</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ai_notes" class="form-label fw-bold"><i class="fas fa-align-left"></i> Option 2: Paste Notes/Text</label>
+                        <textarea class="form-control" id="ai_notes" name="ai_notes" rows="6" placeholder="Paste the content you want to generate questions from..."></textarea>
+                        <div class="form-text">Paste text directly to generate questions.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-magic"></i> Generate Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

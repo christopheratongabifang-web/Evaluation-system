@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+    <div class="header-actions" style="margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Add New Category</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('add_category') }}">
+        <div class="form-group">
+            <label for="name">Category Name</label>
+            <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Science Fiction">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save Category</button>
+    </form>
+</div>
+{% endblock %}

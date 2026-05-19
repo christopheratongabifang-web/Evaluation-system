@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Create New Assignment</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="form-group mb-3">
+                            <label for="title" class="form-label fw-bold">Assignment Title</label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" placeholder="e.g., Essay on Topic X" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="description" class="form-label fw-bold">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Add instructions for the assignment..."></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="target_class" class="form-label fw-bold">Target Class</label>
+                            <select class="form-control form-control-lg" id="target_class" name="target_class">
+                                <option value="All" selected>All Classes</option>
+                                {% for c in academic_classes %}
+                                <option value="{{ c.name }}" {% if request.args.get('target_class') == c.name %}selected{% endif %}>{{ c.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="instructions_pdf" class="form-label fw-bold">Upload Instructions (PDF) - Optional</label>
+                            <input type="file" class="form-control" id="instructions_pdf" name="instructions_pdf" accept=".pdf">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="start_date" class="form-label fw-bold">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control form-control-lg" id="start_date" name="start_date">
+                                    <small class="text-muted">Optional: When students can start submitting</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="end_date" class="form-label fw-bold">Deadline Date & Time</label>
+                                    <input type="datetime-local" class="form-control form-control-lg" id="end_date" name="end_date">
+                                    <small class="text-muted">Optional: When submissions close</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin_assignments') }}" class="btn btn-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-success btn-lg">Create Assignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

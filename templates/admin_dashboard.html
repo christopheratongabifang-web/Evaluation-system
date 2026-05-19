@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1 style="font-size: 2rem;">Admin Dashboard</h1>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Manage shared books, evaluations, and send updates to all students.</p>
+    </div>
+</div>
+
+<div class="dashboard-hub">
+    <div class="hub-btn active" onclick="showSection('stats-section', this)">
+        <i class="fa-solid fa-chart-line"></i>
+        <div>
+            <h3>Overview</h3>
+            <p>System stats</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('books-section', this)">
+        <i class="fa-solid fa-book"></i>
+        <div>
+            <h3>Manage Books</h3>
+            <p>{{ global_books|length }} Shared</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('evaluations-section', this)">
+        <i class="fa-solid fa-file-invoice"></i>
+        <div>
+            <h3>Evaluations</h3>
+            <p>Manage tests</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('students-section', this)">
+        <i class="fa-solid fa-users"></i>
+        <div>
+            <h3>Students</h3>
+            <p>{{ total_students }} Registered</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('system-section', this)">
+        <i class="fa-solid fa-gears"></i>
+        <div>
+            <h3>System</h3>
+            <p>Notifications</p>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Section -->
+<div id="stats-section" class="dashboard-section active">
+    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px; padding: 1.5rem; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 1rem; text-align: center;">
+                <h3 style="color: var(--text-secondary); font-size: 1rem;">Total books</h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: 2.5rem; font-weight: 700; color: var(--primary);">{{ all_books|length }}</p>
+            </div>
+            <div style="flex: 1; min-width: 220px; padding: 1.5rem; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 1rem; text-align: center;">
+                <h3 style="color: var(--text-secondary); font-size: 1rem;">Shared books</h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: 2.5rem; font-weight: 700; color: var(--success);">{{ global_books|length }}</p>
+            </div>
+            <div style="flex: 1; min-width: 220px; padding: 1.5rem; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 1rem; text-align: center;">
+                <h3 style="color: var(--text-secondary); font-size: 1rem;">Students</h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: 2.5rem; font-weight: 700; color: var(--warning);">{{ total_students }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Books Section -->
+<div id="books-section" class="dashboard-section">
+    <div class="glass" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Shared Library</h2>
+            <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Upload New
+            </a>
+        </div>
+        <div class="book-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+            {% for book in global_books %}
+            <div class="book-card glass">
+                <span class="book-category" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">{{ book.category }}</span>
+                <h3 class="book-title">{{ book.title }}</h3>
+                <p class="book-author">by {{ book.author }}</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-primary" title="Read">
+                        <i class="fa-solid fa-book-open"></i>
+                    </a>
+                    <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline" title="Download">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                    <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline" title="Edit">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+                    <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" title="Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Evaluations Section -->
+<div id="evaluations-section" class="dashboard-section">
+    <div class="glass" style="padding: 2rem;">
+        <h2 style="margin-bottom: 1.5rem;">Academic Management</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <a href="{{ url_for('admin_evaluations') }}" class="hub-btn">
+                <i class="fa-solid fa-file-signature"></i>
+                <h3>Manage Evaluations</h3>
+                <p>Create and edit tests</p>
+            </a>
+            <a href="{{ url_for('admin_assignments') }}" class="hub-btn">
+                <i class="fa-solid fa-list-check"></i>
+                <h3>Assignments</h3>
+                <p>Review student work</p>
+            </a>
+            <a href="{{ url_for('plagiarism_check') }}" class="hub-btn">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <h3>Plagiarism</h3>
+                <p>Check submission integrity</p>
+            </a>
+            <a href="{{ url_for('manage_evaluation_topics') }}" class="hub-btn">
+                <i class="fa-solid fa-tags"></i>
+                <h3>Manage Topics</h3>
+                <p>Define subject areas</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Students Section -->
+<div id="students-section" class="dashboard-section">
+    <div class="glass" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2>Student Roster</h2>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('admin_classes') }}" class="btn btn-warning text-dark fw-bold"><i class="fa-solid fa-graduation-cap me-1"></i> Manage by Class</a>
+                <a href="{{ url_for('manage_students') }}" class="btn btn-outline">Advanced Management</a>
+            </div>
+        </div>
+        {% if students %}
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="text-align:left; padding: 1rem; border-bottom: 1px solid var(--surface-border);">Username</th>
+                        <th style="text-align:left; padding: 1rem; border-bottom: 1px solid var(--surface-border);">Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr style="border-bottom: 1px solid var(--surface-border);">
+                        <td style="padding: 1rem;">{{ student.username }}</td>
+                        <td style="padding: 1rem;">{{ student.email }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No students registered yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- System Section -->
+<div id="system-section" class="dashboard-section">
+    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>System Logs & Activity</h2>
+            <a href="{{ url_for('system_logs') }}" class="btn btn-outline">
+                <i class="fa-solid fa-clipboard-list me-2"></i> View All Logs
+            </a>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Monitor user actions, submissions, and administrative changes across the platform.</p>
+    </div>
+
+    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h2>Broadcast Update</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Send a notification to all registered students.</p>
+        <form action="{{ url_for('send_notification') }}" method="POST">
+            <textarea name="message" placeholder="Type your message here..." required style="width: 100%; min-height: 120px; padding: 1rem; border: 1px solid var(--surface-border); border-radius: 0.75rem; background: rgba(0,0,0,0.2); color: var(--text-primary); font-family: inherit; margin-bottom: 1rem;"></textarea>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-paper-plane"></i> Send Broadcast
+            </button>
+        </form>
+    </div>
+
+    {% if notifications %}
+    <div class="glass" style="padding: 1.5rem;">
+        <h2>Recent Broadcasts</h2>
+        <div class="notification-list" style="margin-top: 1rem;">
+            {% for note in notifications %}
+            <div class="notification-item" style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid var(--surface-border);">
+                <p style="margin: 0 0 0.5rem 0;">{{ note.message }}</p>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ note.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showSection(sectionId, element) {
+    document.querySelectorAll('.dashboard-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    document.querySelectorAll('.hub-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(sectionId).classList.add('active');
+    element.classList.add('active');
+}
+</script>
+{% endblock %}

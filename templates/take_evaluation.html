@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .timer {
+        position: sticky;
+        top: 20px;
+    }
+    .timer.danger {
+        background-color: #f8d7da;
+    }
+    .option-container {
+        margin-bottom: 15px;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .option-container:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    .option-container input[type="radio"]:checked + label {
+        font-weight: bold;
+        color: #007bff;
+    }
+</style>
+
+<!-- Camera Overlay -->
+<div id="cameraOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 2rem; text-align: center;">
+    <i class="fas fa-video fa-4x mb-4" style="color: var(--primary); animation: pulse 2s infinite;"></i>
+    <h2 style="font-weight: 800; font-size: 2.5rem; margin-bottom: 1rem;">Camera Access Required</h2>
+    <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 600px; line-height: 1.6; margin-bottom: 2rem;">
+        To ensure academic integrity, this evaluation requires a live webcam feed. 
+        <br><br>
+        <strong>Please click the button below and allow camera permissions when prompted by your browser.</strong>
+    </p>
+    <button id="enableCameraBtn" type="button" class="btn btn-primary btn-lg" style="padding: 1rem 3rem; font-size: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);">
+        <i class="fas fa-camera me-2"></i> Enable Camera & Start Exam
+    </button>
+    <div id="cameraErrorMessage" style="display: none; margin-top: 1.5rem; padding: 1.25rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 0.75rem; max-width: 550px;">
+        <p id="errorReasonText" style="color: #fca5a5; margin: 0 0 1rem 0; font-size: 1rem; line-height: 1.5;">
+            <i class="fas fa-exclamation-triangle me-1"></i> Camera access was blocked, denied, or unavailable (e.g., no webcam attached or accessing via insecure HTTP).
+        </p>
+        <button id="bypassCameraBtn" type="button" class="btn btn-warning btn-sm fw-bold">
+            <i class="fas fa-unlock me-1"></i> Continue Without Camera (Fallback Mode)
+        </button>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 300px;">
+            <div class="glass" style="padding: 2rem; margin-bottom: 2rem;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);">{{ evaluation.title }}</h1>
+                <p style="color: var(--text-secondary); font-size: 1.1rem;">{{ evaluation.description or 'Please answer all questions carefully.' }}</p>
+            </div>
+
+            <form method="POST" id="evaluationForm">
+                {% for question in questions %}
+                <div class="evaluation-question-card" id="q{{ question.order }}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600;">Question {{ question.order }}</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">{{ question.marks }} Marks</span>
+                    </div>
+                    
+                    <h3 style="font-size: 1.25rem; margin-bottom: 2rem; line-height: 1.6;">{{ question.question_text }}</h3>
+
+                    <div class="options-grid" style="display: grid; gap: 1rem;">
+                        {% for option_label, option_text in [
+                            ('a', question.option_a),
+                            ('b', question.option_b),
+                            ('c', question.option_c),
+                            ('d', question.option_d)
+                        ] %}
+                        <label class="option-wrapper">
+                            <input type="radio" 
+                                   name="question_{{ question.id }}" 
+                                   value="{{ option_label }}"
+                                   {% if response_dict.get(question.id) == option_label %}checked{% endif %}>
+                            <span class="option-marker"></span>
+                            <span class="option-text"><strong>{{ option_label|upper }})</strong> {{ option_text }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div style="display: flex; justify-content: flex-end; padding: 2rem 0;">
+                    <button type="submit" class="btn btn-success btn-lg" name="action" value="submit" style="padding: 1rem 3rem; font-size: 1.25rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);">
+                        <i class="fas fa-paper-plane"></i> Submit Evaluation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="width: 300px; position: sticky; top: 2rem;">
+            <!-- Timer Card -->
+            <div class="glass timer" style="padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; border-left: 4px solid var(--warning);">
+                <h4 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Time Remaining</h4>
+                <div id="timeDisplay" style="font-size: 3rem; font-weight: 700; font-variant-numeric: tabular-nums;">{{ remaining_minutes }}:00</div>
+            </div>
+
+            <!-- Progress Card -->
+            <div class="glass" style="padding: 1.5rem;">
+                <h4 style="margin-bottom: 1rem;">Progress</h4>
+                <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
+                    <div id="progressBar" style="background: var(--success); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    <span>Answered</span>
+                    <span id="answeredCount">0</span> / {{ questions|length }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;">
+                    {% for question in questions %}
+                    <a href="#q{{ question.order }}" 
+                       id="nav-q{{ question.id }}"
+                       class="btn btn-outline" 
+                       style="padding: 0.5rem 0; font-size: 0.85rem; border-radius: 0.5rem;">{{ question.order }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let remainingMinutes = {{ remaining_minutes }};
+    let totalSeconds = remainingMinutes * 60;
+    const totalQuestions = {{ questions|length }};
+
+    // Timer functionality
+    function updateTimer() {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const display = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        document.getElementById('timeDisplay').textContent = display;
+
+        if (totalSeconds <= 300) { // Last 5 minutes
+            document.querySelector('.timer').classList.add('danger');
+        }
+
+        if (totalSeconds <= 0) {
+            document.getElementById('evaluationForm').submit();
+        }
+
+        totalSeconds--;
+    }
+
+    // Update progress bar
+    function updateProgress() {
+        let answered = 0;
+        {% for question in questions %}
+        {
+            const input = document.querySelector('input[name="question_{{ question.id }}"]:checked');
+            const navBtn = document.getElementById('nav-q{{ question.id }}');
+            if (input) {
+                answered++;
+                if (navBtn) {
+                    navBtn.classList.remove('btn-outline');
+                    navBtn.classList.add('btn-primary');
+                }
+            } else {
+                if (navBtn) {
+                    navBtn.classList.remove('btn-primary');
+                    navBtn.classList.add('btn-outline');
+                }
+            }
+        }
+        {% endfor %}
+
+        document.getElementById('answeredCount').textContent = answered;
+        const progress = (answered / totalQuestions) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+    }
+
+    // Set up form to auto-save answers
+    document.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', updateProgress);
+    });
+
+    let timerInterval;
+    let snapshotInterval;
+
+    // --- CAMERA PROCTORING & INITIALIZATION ---
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.style.display = 'none';
+    document.body.appendChild(video);
+    const canvas = document.createElement('canvas');
+
+    const enableCameraBtn = document.getElementById('enableCameraBtn');
+    const cameraErrorMessage = document.getElementById('cameraErrorMessage');
+    const bypassCameraBtn = document.getElementById('bypassCameraBtn');
+    const errorReasonText = document.getElementById('errorReasonText');
+
+    function startExamFlow() {
+        document.getElementById('cameraOverlay').style.opacity = '0';
+        setTimeout(() => document.getElementById('cameraOverlay').style.display = 'none', 300);
+        
+        timerInterval = setInterval(updateTimer, 1000);
+        updateProgress();
+        updateTimer();
+        initAntiCheating();
+    }
+
+    bypassCameraBtn.addEventListener('click', function() {
+        startExamFlow();
+    });
+
+    enableCameraBtn.addEventListener('click', function() {
+        enableCameraBtn.disabled = true;
+        enableCameraBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Requesting Camera...';
+        
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Your browser does not support camera access or you are accessing via insecure HTTP.");
+            }
+            
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    startExamFlow();
+                    snapshotInterval = setInterval(captureSnapshot, 5000);
+                })
+                .catch(err => {
+                    enableCameraBtn.disabled = false;
+                    enableCameraBtn.innerHTML = '<i class="fas fa-camera me-2"></i> Try Enabling Camera Again';
+                    errorReasonText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Camera access was blocked or denied by your browser permissions.';
+                    cameraErrorMessage.style.display = 'block';
+                });
+        } catch (e) {
+            enableCameraBtn.disabled = false;
+            enableCameraBtn.innerHTML = '<i class="fas fa-camera me-2"></i> Try Enabling Camera Again';
+            errorReasonText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> ' + e.message;
+            cameraErrorMessage.style.display = 'block';
+        }
+    });
+
+    function initAntiCheating() {
+        // 1. Auto-submit on Tab Switch / Minimize
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                alert("Security Violation: You left the evaluation window. Your evaluation has been automatically submitted.");
+                document.getElementById('evaluationForm').submit();
+            }
+        });
+
+        window.addEventListener('blur', function() {
+            // Auto submit if the window loses focus entirely
+            alert("Security Violation: Evaluation window lost focus. Your evaluation has been automatically submitted.");
+            document.getElementById('evaluationForm').submit();
+        });
+
+        // 2. Prevent Screenshots & Copy/Paste
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'PrintScreen' || (e.ctrlKey && ['c', 'p', 's', 'v', 'x'].includes(e.key.toLowerCase()))) {
+                e.preventDefault();
+                alert('Security Notice: This action is disabled during the evaluation.');
+            }
+        });
+
+        // 3. Dynamic Watermark
+        const watermark = document.createElement('div');
+        watermark.textContent = '{{ current_user.username }} - {{ current_user.email }}';
+        watermark.style.position = 'fixed';
+        watermark.style.opacity = '0.05';
+        watermark.style.fontSize = '2rem';
+        watermark.style.pointerEvents = 'none';
+        watermark.style.zIndex = '9999';
+        watermark.style.transform = 'rotate(-30deg)';
+        document.body.appendChild(watermark);
+
+        setInterval(() => {
+            watermark.style.top = (Math.random() * 80) + 'vh';
+            watermark.style.left = (Math.random() * 80) + 'vw';
+        }, 4000);
+    }
+
+    function captureSnapshot() {
+        if (!video.videoWidth) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        // Compress heavily to avoid massive payload
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.4); 
+        
+        fetch('/api/evaluation/{{ attempt.id }}/snapshot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: dataUrl })
+        }).catch(err => console.log('Snapshot failed', err));
+    }
+</script>
+
+{% endblock %}

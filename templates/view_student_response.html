@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">Student Response</h1>
+            <p class="text-muted">
+                <strong>Student:</strong> {{ attempt.student_profile.full_name }} ({{ attempt.student_profile.student_id }})
+                <br>
+                <strong>Submitted:</strong> {{ attempt.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if attempt.submitted_at else 'N/A' }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Total Score</h5>
+                    <h2 class="text-primary">{{ attempt.total_marks_obtained }} / {{ evaluation.total_marks }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Detailed Responses</h5>
+        </div>
+        <div class="card-body">
+            {% for question in questions %}
+            {% set response = response_dict.get(question.id) %}
+            <div class="card mb-4 {% if response and response.is_correct %}border-left-4 border-success{% elif response %}border-left-4 border-danger{% else %}border-left-4 border-warning{% endif %}" style="border-left: 4px solid {% if response and response.is_correct %}#28a745{% elif response %}#dc3545{% else %}#ffc107{% endif %};">
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-8">
+                            <h6 class="card-title">Q{{ question.order }}. {{ question.question_text }}</h6>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            {% if response %}
+                                {% if response.is_correct %}
+                                    <span class="badge bg-success">✓ Correct ({{ response.marks_obtained }} marks)</span>
+                                {% else %}
+                                    <span class="badge bg-danger">✗ Wrong (0 marks)</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">No Answer (0 marks)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="options mb-3 ms-3">
+                        <p class="mb-2">
+                            <strong>a) {{ question.option_a }}</strong>
+                            {% if question.correct_answer == 'a' %}
+                                <span class="badge bg-success">Correct Answer</span>
+                            {% endif %}
+                            {% if response and response.selected_answer == 'a' %}
+                                <span class="badge bg-info">Student's Choice</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">
+                            <strong>b) {{ question.option_b }}</strong>
+                            {% if question.correct_answer == 'b' %}
+                                <span class="badge bg-success">Correct Answer</span>
+                            {% endif %}
+                            {% if response and response.selected_answer == 'b' %}
+                                <span class="badge bg-info">Student's Choice</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">
+                            <strong>c) {{ question.option_c }}</strong>
+                            {% if question.correct_answer == 'c' %}
+                                <span class="badge bg-success">Correct Answer</span>
+                            {% endif %}
+                            {% if response and response.selected_answer == 'c' %}
+                                <span class="badge bg-info">Student's Choice</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">
+                            <strong>d) {{ question.option_d }}</strong>
+                            {% if question.correct_answer == 'd' %}
+                                <span class="badge bg-success">Correct Answer</span>
+                            {% endif %}
+                            {% if response and response.selected_answer == 'd' %}
+                                <span class="badge bg-info">Student's Choice</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('evaluation_responses', eval_id=evaluation.id) }}" class="btn btn-secondary">Back to Responses</a>
+    </div>
+</div>
+{% endblock %}

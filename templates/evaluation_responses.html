@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">{{ evaluation.title }} - Responses</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('generate_evaluation_report_pdf', eval_id=evaluation.id) }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-file-pdf"></i> Download PDF Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Total Submissions</h5>
+                    <h2 class="text-primary">{{ stats.submitted }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Passed</h5>
+                    <h2 class="text-success">{{ stats.passed }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Failed</h5>
+                    <h2 class="text-danger">{{ stats.submitted - stats.passed }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Average Marks</h5>
+                    <h2 class="text-info">{{ "%.1f"|format(stats.avg_marks) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if attempts %}
+        <div class="table-responsive">
+            <table class="table table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    {% if attempt.is_submitted %}
+                    <tr>
+                        <td>{{ attempt.student_profile.student_id }}</td>
+                        <td>{{ attempt.student_profile.full_name }}</td>
+                        <td><strong>{{ attempt.total_marks_obtained }} / {{ evaluation.total_marks }}</strong></td>
+                        <td>
+                            {% set percentage = (attempt.total_marks_obtained / evaluation.total_marks * 100)|round(2) %}
+                            <span class="badge {% if attempt.total_marks_obtained >= passing_marks %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ percentage }}%
+                            </span>
+                        </td>
+                        <td>{{ attempt.submitted_at.strftime('%Y-%m-%d %H:%M') if attempt.submitted_at else 'N/A' }}</td>
+                        <td>
+                            {% if attempt.total_marks_obtained >= passing_marks %}
+                                <span class="badge bg-success">PASSED</span>
+                            {% else %}
+                                <span class="badge bg-danger">FAILED</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('view_student_response', eval_id=evaluation.id, attempt_id=attempt.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">No Submissions Yet</h4>
+            <p>Students haven't submitted this evaluation yet.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin_evaluations') }}" class="btn btn-secondary">Back to Evaluations</a>
+    </div>
+</div>
+{% endblock %}

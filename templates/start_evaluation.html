@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">{{ evaluation.title }}</h2>
+                </div>
+                <div class="card-body p-4">
+                    {% if evaluation.description %}
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading">Instructions:</h6>
+                        {{ evaluation.description }}
+                    </div>
+                    {% endif %}
+
+                    <div class="evaluation-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Total Questions:</strong> {{ evaluation.questions|length }}</p>
+                                <p class="mb-2"><strong>Total Marks:</strong> {{ evaluation.total_marks }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Time Limit:</strong> {{ evaluation.time_limit_minutes }} minutes</p>
+                                <p class="mb-2"><strong>Passing Percentage:</strong> {{ evaluation.passing_percentage }}%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if profile %}
+                    <div class="alert alert-success" role="alert">
+                        <h6 class="alert-heading">Your Information:</h6>
+                        <p class="mb-0">
+                            <strong>Student ID:</strong> {{ profile.student_id }}<br>
+                            <strong>Name:</strong> {{ profile.full_name }}
+                        </p>
+                    </div>
+
+                    <form method="POST">
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-play"></i> Start Evaluation
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">Incomplete Profile</h6>
+                        <p class="mb-3">Please complete your student profile before taking this evaluation.</p>
+                        <a href="{{ url_for('student_profile') }}" class="btn btn-warning">
+                            <i class="fas fa-user"></i> Complete Profile
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('list_evaluations') }}" class="btn btn-secondary mt-3">Back to Evaluations</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

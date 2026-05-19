@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="logs-wrapper" style="background: linear-gradient(135deg, #0f172a 0%, #2e1065 50%, #020617 100%); min-height: 100vh; padding: 3rem 1rem; margin-top: -1.5rem; position: relative; overflow: hidden;">
+    <!-- Decorative background elements -->
+    <div style="position: absolute; top: -10%; left: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%); filter: blur(40px); pointer-events: none;"></div>
+    <div style="position: absolute; bottom: -10%; right: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%); filter: blur(40px); pointer-events: none;"></div>
+    
+    <style>
+        .custom-glass-table th, .custom-glass-table td {
+            background-color: transparent !important;
+            border-bottom-color: rgba(255,255,255,0.1) !important;
+        }
+        .custom-glass-table tbody tr:hover td {
+            background-color: rgba(255,255,255,0.05) !important;
+        }
+    </style>
+    <div class="container" style="position: relative; z-index: 1;">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-5" style="color: #ffffff; font-weight: 700;">System Logs</h1>
+            <p style="color: #cbd5e1;">Chronological record of system events</p>
+        </div>
+    </div>
+
+    <div style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(16px); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem;">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table custom-glass-table mb-0" style="color: #ffffff;">
+                <thead style="background: rgba(255,255,255,0.1);">
+                    <tr>
+                        <th style="color: #e2e8f0; border-bottom: none; font-weight: 600; padding: 1rem;">Time</th>
+                        <th style="color: #e2e8f0; border-bottom: none; font-weight: 600; padding: 1rem;">User</th>
+                        <th style="color: #e2e8f0; border-bottom: none; font-weight: 600; padding: 1rem;">Action</th>
+                        <th style="color: #e2e8f0; border-bottom: none; font-weight: 600; padding: 1rem;">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent;">
+                        <td style="color: #f1f5f9; padding: 1rem;">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td style="color: #38bdf8; padding: 1rem; font-weight: 500;">{{ log.user.username if log.user else 'System' }}</td>
+                        <td style="color: #f8fafc; font-weight: 600; padding: 1rem;">{{ log.action }}</td>
+                        <td style="color: #cbd5e1; padding: 1rem;">{{ log.details }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center p-5">
+            <i class="fas fa-clipboard-list fa-3x mb-3" style="color: #64748b; opacity: 0.8;"></i>
+            <h4 style="color: #cbd5e1;">No logs recorded yet.</h4>
+        </div>
+        {% endif %}
+    </div>
+    </div>
+</div>
+{% endblock %}

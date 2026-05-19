@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+    <div class="header-actions" style="margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Add New Book</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Book Title</label>
+            <input type="text" id="title" name="title" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" name="author" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="" disabled selected>Select a category</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" style="background: var(--background); color: var(--text-primary);">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {% if current_user.is_admin %}
+        <div class="form-group">
+            <label for="target_class">Target Class</label>
+            <select id="target_class" name="target_class" class="form-control">
+                <option value="All" selected style="background: var(--background); color: var(--text-primary);">All Classes</option>
+                {% for c in academic_classes %}
+                <option value="{{ c.name }}" style="background: var(--background); color: var(--text-primary);">{{ c.display_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        {% if current_user.is_admin %}
+        <div class="form-group" style="padding: 1rem; margin-bottom: 1rem; border-radius: 1rem; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.18);">
+            <p style="margin: 0; color: var(--text-secondary);">As an admin, this book will be shared with all users and appear on their dashboards.</p>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="file">Upload Book File (PDF, EPUB, etc.)</label>
+            <input type="file" id="file" name="file" class="form-control" required style="padding: 0.5rem;">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save Book</button>
+    </form>
+</div>
+{% endblock %}

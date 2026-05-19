@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div style="max-width: 800px; margin: 0 auto;">
+        <div class="glass" style="padding: 2.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: var(--success); color: white; width: 3rem; height: 3rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0;">Create Evaluation</h2>
+                    <p style="margin: 0; color: var(--text-secondary);">Set up a new assessment for your students.</p>
+                </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group mb-4">
+                    <label for="title">Evaluation Title</label>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="e.g., Mid-Term Examination" required style="padding: 1rem; font-size: 1.1rem;">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="description">Instructions / Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter instructions for students..." style="padding: 1rem;"></textarea>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="topic_id">Subject / Topic</label>
+                    <select class="form-control" id="topic_id" name="topic_id" style="padding: 1rem;">
+                        <option value="">No Topic (General)</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Grouping evaluations by subject helps students find them more easily.</small>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="target_class">Target Class</label>
+                    <select class="form-control" id="target_class" name="target_class" style="padding: 1rem;">
+                        <option value="All" selected>All Classes</option>
+                        {% for c in academic_classes %}
+                        <option value="{{ c.name }}" {% if request.args.get('target_class') == c.name %}selected{% endif %}>{{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Only students in this class will see and be able to take this evaluation.</small>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="notes_pdf">Upload Notes (PDF) - Optional</label>
+                    <input type="file" class="form-control" id="notes_pdf" name="notes_pdf" accept=".pdf" style="padding: 0.75rem;">
+                    <small class="text-muted">If uploaded, we can generate questions based on these notes.</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label for="total_marks">Total Marks</label>
+                        <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1" required style="padding: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="passing_percentage">Passing (%)</label>
+                        <input type="number" class="form-control" id="passing_percentage" name="passing_percentage" value="40" min="0" max="100" required style="padding: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="time_limit_minutes">Time (mins)</label>
+                        <input type="number" class="form-control" id="time_limit_minutes" name="time_limit_minutes" value="60" min="1" required style="padding: 1rem;">
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid var(--surface-border); padding-top: 2rem;">
+                    <a href="{{ url_for('admin_evaluations') }}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2.5rem;">
+                        Next: Add Questions <i class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

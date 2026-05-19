@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container glass">
+    <h2 style="margin-bottom: 2rem; text-align: center;">Create Account</h2>
+    <form method="POST" action="{{ url_for('register') }}">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" required placeholder="you@example.com" oninput="this.value = this.value.toLowerCase()">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••">
+                <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+            </div>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">Password must include at least one uppercase letter and one special character.</p>
+        </div>
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+        Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary); text-decoration: none;">Login</a>
+    </p>
+</div>
+{% endblock %}

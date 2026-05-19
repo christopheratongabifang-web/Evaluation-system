@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Manage Students</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <form method="POST" action="{{ url_for('delete_all_students') }}" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('WARNING: This will permanently delete ALL students and all their associated evaluations, books, and assignments. Are you absolutely sure?')">
+                    <i class="fas fa-trash-alt"></i> Delete All Students
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Class</th>
+                        <th>Email</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><strong>{{ student.student_id }}</strong></td>
+                        <td>{{ student.full_name }}</td>
+                        <td><span class="badge bg-info text-dark">{{ student.student_class or 'Unassigned' }}</span></td>
+                        <td>{{ student.user.email }}</td>
+                        <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if student.user.is_muted %}
+                                <span class="badge bg-danger">Muted</span>
+                            {% elif student.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('generate_student_report_card', student_id=student.id) }}" class="btn btn-sm btn-primary ms-1" title="Download Report Card PDF">
+                                    <i class="fas fa-file-pdf"></i> Report Card
+                                </a>
+                                
+                                {% if student.user.is_muted %}
+                                <form method="POST" action="{{ url_for('toggle_mute_student', user_id=student.user.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-success ms-1">
+                                        <i class="fas fa-volume-up"></i> Unmute
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('toggle_mute_student', user_id=student.user.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-warning ms-1">
+                                        <i class="fas fa-volume-mute"></i> Mute
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if student.is_active %}
+                                <form method="POST" action="{{ url_for('remove_student', student_id=student.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Permanently delete this student and all their data?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">No Students Yet</h4>
+            <p>Students will appear here after they complete their profile and take an evaluation.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Admin Dashboard</a>
+    </div>
+</div>
+{% endblock %}

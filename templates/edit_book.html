@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+    <div class="header-actions" style="margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Edit Book</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('edit_book', book_id=book.id) }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Book Title</label>
+            <input type="text" id="title" name="title" class="form-control" value="{{ book.title }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" name="author" class="form-control" value="{{ book.author }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" class="form-control" required>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if book.category == cat %}selected{% endif %} style="background: var(--background); color: var(--text-primary);">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {% if current_user.is_admin %}
+        <div class="form-group">
+            <label for="target_class">Target Class</label>
+            <select id="target_class" name="target_class" class="form-control">
+                <option value="All" {% if book.target_class == 'All' %}selected{% endif %} style="background: var(--background); color: var(--text-primary);">All Classes</option>
+                {% for c in academic_classes %}
+                <option value="{{ c.name }}" {% if book.target_class == c.name %}selected{% endif %} style="background: var(--background); color: var(--text-primary);">{{ c.display_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="file">Replace Book File (Leave empty to keep current file)</label>
+            <div style="margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Current file: {{ book.file_path }}
+            </div>
+            <input type="file" id="file" name="file" class="form-control" style="padding: 0.5rem;">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Update Book</button>
+    </form>
+</div>
+{% endblock %}

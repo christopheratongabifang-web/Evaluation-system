@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            
+            <!-- Score Hero Section -->
+            <div class="glass p-5 text-center mb-5" style="border-radius: 2.5rem; position: relative; overflow: hidden;">
+                <!-- Subtle background glow -->
+                <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: {% if is_passed %}rgba(16, 185, 129, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; filter: blur(60px); border-radius: 50%;"></div>
+                
+                <div class="mb-4">
+                    {% if is_passed %}
+                        <div style="width: 80px; height: 80px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);">
+                            <i class="fas fa-trophy fa-2x text-white"></i>
+                        </div>
+                        <h1 style="font-weight: 800; letter-spacing: -0.03em;">Congratulations, You Passed!</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Excellent work! You've successfully met the criteria for this evaluation.</p>
+                    {% else %}
+                        <div style="width: 80px; height: 80px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);">
+                            <i class="fas fa-redo fa-2x text-white"></i>
+                        </div>
+                        <h1 style="font-weight: 800; letter-spacing: -0.03em;">Keep Pushing Forward!</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">You didn't quite reach the passing mark this time, but every attempt is a step toward mastery.</p>
+                    {% endif %}
+                </div>
+
+                <div class="row mt-5 g-4">
+                    <div class="col-6 col-md-3">
+                        <div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+                            <h3 style="margin: 0; font-weight: 800; color: var(--primary);">{{ attempt.total_marks_obtained }}</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Score</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+                            <h3 style="margin: 0; font-weight: 800;">{{ evaluation.total_marks }}</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Total</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+                            <h3 style="margin: 0; font-weight: 800; color: {% if is_passed %}#10b981{% else %}#f59e0b{% endif %};">{{ "%.1f"|format(percentage) }}%</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Percentage</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+                            <h3 style="margin: 0; font-weight: 800; opacity: 0.7;">{{ "%.0f"|format(passing_marks) }}</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Target</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Bar -->
+                <div class="mt-5 p-2" style="background: rgba(255,255,255,0.05); border-radius: 2rem;">
+                    <div class="progress" style="height: 12px; border-radius: 1rem; background: transparent;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ percentage }}%; background: linear-gradient(90deg, var(--primary), {% if is_passed %}#10b981{% else %}#f59e0b{% endif %}); border-radius: 1rem; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);"
+                             aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Review -->
+            <div class="mb-5">
+                <div class="d-flex align-items-center mb-4">
+                    <h2 style="font-weight: 800; margin: 0;">Detailed <span style="color: var(--primary);">Analysis</span></h2>
+                    <div class="ms-auto">
+                        <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 0.6rem 1rem; border-radius: 0.75rem; border: 1px solid var(--surface-border);">
+                            <i class="fas fa-list-check me-2"></i> {{ questions|length }} Questions Reviewed
+                        </span>
+                    </div>
+                </div>
+
+                {% for question in questions %}
+                {% set response = response_dict.get(question.id) %}
+                <div class="glass mb-4" style="border-radius: 1.5rem; overflow: hidden; border: 1px solid {% if response and response.is_correct %}rgba(16, 185, 129, 0.2){% elif response %}rgba(239, 68, 68, 0.2){% else %}rgba(245, 158, 11, 0.2){% endif %};">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 style="font-weight: 700; flex: 1; line-height: 1.6;">
+                                <span style="color: var(--primary); margin-right: 0.5rem;">Q{{ loop.index }}.</span> {{ question.question_text }}
+                            </h5>
+                            <div class="ms-3">
+                                {% if response %}
+                                    {% if response.is_correct %}
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.5rem 0.75rem; border-radius: 0.75rem;">
+                                            <i class="fas fa-check me-1"></i> Correct
+                                        </span>
+                                    {% else %}
+                                        <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.5rem 0.75rem; border-radius: 0.75rem;">
+                                            <i class="fas fa-times me-1"></i> Incorrect
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 0.5rem 0.75rem; border-radius: 0.75rem;">
+                                        <i class="fas fa-minus me-1"></i> Skipped
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: {% if response and response.is_correct %}rgba(16, 185, 129, 0.05){% elif response %}rgba(239, 68, 68, 0.05){% else %}rgba(255,255,255,0.02){% endif %}; border-radius: 1rem; height: 100%;">
+                                    <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Your Selection</label>
+                                    <p style="margin: 0; font-weight: 600;">
+                                        {% if response and response.selected_answer %}
+                                            <span style="color: var(--primary);">{{ response.selected_answer|upper }})</span> 
+                                            {% if response.selected_answer == 'a' %}{{ question.option_a }}
+                                            {% elif response.selected_answer == 'b' %}{{ question.option_b }}
+                                            {% elif response.selected_answer == 'c' %}{{ question.option_c }}
+                                            {% elif response.selected_answer == 'd' %}{{ question.option_d }}
+                                            {% endif %}
+                                        {% else %}
+                                            <em style="opacity: 0.5;">Not Attempted</em>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: rgba(16, 185, 129, 0.05); border-radius: 1rem; height: 100%;">
+                                    <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Correct Answer</label>
+                                    <p style="margin: 0; font-weight: 600; color: #10b981;">
+                                        <span style="opacity: 0.8;">{{ question.correct_answer|upper }})</span> 
+                                        {% if question.correct_answer == 'a' %}{{ question.option_a }}
+                                        {% elif question.correct_answer == 'b' %}{{ question.option_b }}
+                                        {% elif question.correct_answer == 'c' %}{{ question.option_c }}
+                                        {% elif question.correct_answer == 'd' %}{{ question.option_d }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pb-5 d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('list_evaluations') }}" class="btn btn-outline-primary" style="padding: 1rem 2rem; border-radius: 1.25rem; font-weight: 700;">
+                    <i class="fas fa-arrow-left me-2"></i> All Evaluations
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="padding: 1rem 2rem; border-radius: 1.25rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);">
+                    <i class="fas fa-home me-2"></i> Back to Hub
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

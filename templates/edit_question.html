@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Edit Question</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <div class="form-group mb-4">
+                            <label for="question_text" class="form-label fw-bold">Question</label>
+                            <textarea class="form-control form-control-lg" id="question_text" name="question_text" rows="3" required>{{ question.question_text }}</textarea>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Options</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label for="option_a" class="form-label fw-bold">Option A</label>
+                                    <input type="text" class="form-control form-control-lg" id="option_a" name="option_a" value="{{ question.option_a }}" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="option_b" class="form-label fw-bold">Option B</label>
+                                    <input type="text" class="form-control form-control-lg" id="option_b" name="option_b" value="{{ question.option_b }}" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="option_c" class="form-label fw-bold">Option C</label>
+                                    <input type="text" class="form-control form-control-lg" id="option_c" name="option_c" value="{{ question.option_c }}" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="option_d" class="form-label fw-bold">Option D</label>
+                                    <input type="text" class="form-control form-control-lg" id="option_d" name="option_d" value="{{ question.option_d }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="correct_answer" class="form-label fw-bold">Correct Answer</label>
+                                    <select class="form-select form-select-lg" id="correct_answer" name="correct_answer" required>
+                                        <option value="a" {% if question.correct_answer == 'a' %}selected{% endif %}>Option A</option>
+                                        <option value="b" {% if question.correct_answer == 'b' %}selected{% endif %}>Option B</option>
+                                        <option value="c" {% if question.correct_answer == 'c' %}selected{% endif %}>Option C</option>
+                                        <option value="d" {% if question.correct_answer == 'd' %}selected{% endif %}>Option D</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="marks" class="form-label fw-bold">Marks for Correct Answer</label>
+                                    <input type="number" class="form-control form-control-lg" id="marks" name="marks" value="{{ question.marks }}" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('edit_evaluation_questions', eval_id=evaluation.id) }}" class="btn btn-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-warning btn-lg">Update Question</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

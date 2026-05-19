@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-actions" style="margin-bottom: 3rem;">
+    <div>
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Welcome back, <span style="color: var(--primary);">{{ current_user.username }}</span></h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 0.5rem;">Ready to continue your learning journey?</p>
+    </div>
+    {% if no_admin_exists and not current_user.is_admin %}
+    <div class="glass" style="margin-top: 1rem; padding: 1.5rem; border-left: 4px solid var(--warning);">
+        <p style="margin: 0; color: var(--text-secondary);">System Setup: No admin account exists yet. You can claim administrative rights.</p>
+        <form action="{{ url_for('claim_admin') }}" method="POST" style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-warning">Claim Admin Rights</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% if active_evaluations_count > 0 or active_assignments_count > 0 %}
+<div class="glass mb-4" style="padding: 1.5rem 2rem; border-left: 5px solid var(--warning); background: rgba(245, 158, 11, 0.1); border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="background: var(--warning); color: #000; width: 3.5rem; height: 3.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; box-shadow: 0 0 20px rgba(245,158,11,0.5);">
+            <i class="fa-solid fa-bell"></i>
+        </div>
+        <div>
+            <h3 style="margin: 0; font-size: 1.3rem; color: var(--text-primary);">Academic Tasks Available!</h3>
+            <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 1rem;">
+                You currently have 
+                {% if active_evaluations_count > 0 %}<strong><span style="color: var(--warning);">{{ active_evaluations_count }} evaluation test(s)</span></strong>{% endif %}
+                {% if active_evaluations_count > 0 and active_assignments_count > 0 %} and {% endif %}
+                {% if active_assignments_count > 0 %}<strong><span style="color: var(--warning);">{{ active_assignments_count }} assignment task(s)</span></strong>{% endif %}
+                waiting to be completed.
+            </p>
+        </div>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        {% if active_evaluations_count > 0 %}
+        <a href="{{ url_for('list_evaluations') }}" class="btn btn-warning" style="font-weight: 700; color: #000;">Take Test</a>
+        {% endif %}
+        {% if active_assignments_count > 0 %}
+        <a href="{{ url_for('list_assignments') }}" class="btn btn-outline" style="border-color: var(--warning); color: var(--warning); font-weight: 700;">View Assignments</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Dashboard Hub -->
+<div class="dashboard-hub">
+    <div class="hub-btn active" onclick="showSection('books-section', this)">
+        <i class="fa-solid fa-book"></i>
+        <div>
+            <h3>My Library</h3>
+            <p>{{ total_books }} Books</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('evaluations-section', this)">
+        <i class="fa-solid fa-file-invoice"></i>
+        <div>
+            <h3>Evaluations</h3>
+            <p>{% if active_evaluations_count > 0 %}<span style="color: var(--warning); font-weight: bold;">{{ active_evaluations_count }} Active</span>{% else %}Take tests{% endif %}</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('assignments-section', this)">
+        <i class="fa-solid fa-tasks"></i>
+        <div>
+            <h3>Assignments</h3>
+            <p>{% if active_assignments_count > 0 %}<span style="color: var(--warning); font-weight: bold;">{{ active_assignments_count }} Active</span>{% else %}View tasks{% endif %}</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('messages-section', this)">
+        <i class="fa-solid fa-envelope"></i>
+        <div>
+            <h3>Messages</h3>
+            <p>{{ unread_messages }} Unread</p>
+        </div>
+    </div>
+    <div class="hub-btn" onclick="showSection('notifications-section', this)">
+        <i class="fa-solid fa-bell"></i>
+        <div>
+            <h3>Updates</h3>
+            <p>{{ unread_count }} New</p>
+        </div>
+    </div>
+</div>
+
+<!-- Books Section -->
+<div id="books-section" class="dashboard-section active">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 1.75rem; margin: 0;">My Bookshelf</h2>
+        <form action="{{ url_for('dashboard') }}" method="GET" style="display: flex; align-items: center; gap: 0.75rem; background: var(--surface); padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid var(--surface-border);">
+            <label for="sort" style="color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">Sort by:</label>
+            <select name="sort" id="sort" onchange="this.form.submit()" style="background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; outline: none; cursor: pointer;">
+                <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                <option value="category" {% if current_sort == 'category' %}selected{% endif %}>By Category</option>
+                
+            </select>
+        </form>
+    </div>
+    {% if recent_books %}
+    <div class="recent-section glass" style="margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1rem;">Recently Read</h2>
+        <div class="recent-grid">
+            {% for book in recent_books %}
+            <div class="recent-item">
+                <div>
+                    <h3>{{ book.title }}</h3>
+                    <p class="book-author">by {{ book.author }}</p>
+                </div>
+                <span>{{ book.last_read_at.strftime('%b %d, %Y') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if total_books > 0 %}
+        {% for category, books in books_by_category.items() %}
+        {% set color = category_colors[category] %}
+        <div style="margin-bottom: 3rem;">
+            <h2 style="font-size: 1.5rem; color: {{ color }}; border-bottom: 2px solid {{ color }}33; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">{{ category }}</h2>
+            <div class="book-grid">
+                {% for book in books %}
+                {% set tag_color = category_colors.get(book.category, '#4F46E5') %}
+                <div class="book-card glass">
+                    <span class="book-category" style="background: {{ tag_color }}22; color: {{ tag_color }}; border: 1px solid {{ tag_color }}33;">{{ book.category }}</span>
+                    {% if book.is_global and book.user_id != current_user.id %}
+                        <span class="book-category" style="background: #f59e0b; color: #92400e; border: 1px solid rgba(245, 158, 11, 0.3); margin-left: 0.5rem;">Admin Book</span>
+                    {% endif %}
+                    <h3 class="book-title">{{ book.title }}</h3>
+                    <p class="book-author">by {{ book.author }}</p>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                        <i class="fa-solid fa-calendar-day"></i> Added: {{ book.created_at.strftime('%b %d, %Y') }}
+                    </p>
+                    
+                    <div class="book-actions">
+                        <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn {% if book.status == 'unread' %}btn-primary{% elif book.status == 'reading' %}btn-warning{% else %}btn-success{% endif %}" title="Read">
+                            <i class="fa-solid {% if book.status == 'reading' %}fa-book-open{% elif book.status == 'finished' %}fa-check{% else %}fa-book{% endif %}"></i> 
+                            {% if book.status == 'reading' %}Resume{% elif book.status == 'finished' %}Finished{% else %}Start{% endif %}
+                        </a>
+                        {% if current_user.is_admin %}
+                        <div style="display: flex; gap: 0.25rem;">
+                            <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline" title="Download" style="padding: 0.5rem; flex: 0 0 auto;">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                            <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline" title="Edit" style="padding: 0.5rem; flex: 0 0 auto;">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="glass" style="padding: 4rem 2rem; text-align: center;">
+        <i class="fa-solid fa-book-open" style="font-size: 3rem; color: var(--surface-border); margin-bottom: 1rem;"></i>
+        <h3>No books yet</h3>
+        <p style="color: var(--text-secondary);">Your library is currently empty.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Evaluations Section -->
+<div id="evaluations-section" class="dashboard-section">
+    <div class="glass" style="padding: 2rem; text-align: center;">
+        <h2>Evaluations</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Check your available tests and quizzes.</p>
+        <a href="{{ url_for('list_evaluations') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-file-invoice"></i> Open Evaluations Portal
+        </a>
+    </div>
+</div>
+
+<!-- Assignments Section -->
+<div id="assignments-section" class="dashboard-section">
+    <div class="glass" style="padding: 2rem; text-align: center;">
+        <h2>Assignments</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Manage your course assignments and submissions.</p>
+        <a href="{{ url_for('list_assignments') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-tasks"></i> Open Assignments Portal
+        </a>
+    </div>
+</div>
+
+<!-- Notifications Section -->
+<div id="notifications-section" class="dashboard-section">
+    {% if notifications %}
+    <div class="notifications-panel glass" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Recent Notifications</h2>
+            {% if unread_count %}
+                <form action="{{ url_for('mark_notifications_read') }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Mark All as Read</button>
+                </form>
+            {% endif %}
+        </div>
+        <div class="notification-list">
+            {% for note in notifications %}
+            <div class="notification-item{% if not note.is_read %} unread{% endif %}" style="padding: 1rem; margin-bottom: 0.75rem; border-radius: 0.75rem; background: var(--surface); border: 1px solid var(--surface-border);">
+                <p style="margin: 0 0 0.5rem 0;">{{ note.message }}</p>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ note.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+<!-- Messages Section -->
+<div id="messages-section" class="dashboard-section">
+    <div class="glass" style="padding: 2rem; text-align: center;">
+        <h2>Private Messages</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Communicate with your teachers and peers.</p>
+        <a href="{{ url_for('messages') }}" class="btn btn-info btn-lg">
+            <i class="fa-solid fa-envelope"></i> Open Messages Inbox
+        </a>
+    </div>
+</div>
+
+<!-- AI Chat Sidebar -->
+<div id="aiChatSidebar" class="ai-chat-sidebar">
+    <div class="ai-chat-header">
+        <h3><i class="fa-solid fa-robot"></i> Library AI</h3>
+        <button id="closeChatBtn" type="button" class="ai-close-btn" onclick="closeAIChat()">&times;</button>
+    </div>
+    <div id="chatMessages" class="ai-chat-messages">
+        <div class="ai-message">
+            <p>Hi! I'm your library assistant. Ask me anything about your books, get recommendations, or ask general questions!</p>
+        </div>
+    </div>
+    <div class="ai-chat-input-area">
+        <form id="chatForm" onsubmit="sendMessage(event)">
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chatInput" placeholder="Ask me something..." class="form-control" style="margin: 0; flex: 1;">
+                <button type="submit" class="btn btn-primary" style="margin: 0; padding: 0.75rem 1rem;"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- AI Chat Toggle Button -->
+<button id="aiChatToggle" class="ai-chat-toggle" type="button" title="Open AI Assistant" onclick="toggleAIChat()">
+    <i class="fa-solid fa-robot"></i>
+</button>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function initAIChat() {
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+
+    window.toggleAIChat = function() {
+        const aiSidebar = document.getElementById('aiChatSidebar');
+        if (!aiSidebar) return;
+        aiSidebar.classList.toggle('active');
+        if (aiSidebar.classList.contains('active') && chatInput) {
+            chatInput.focus();
+        }
+    };
+
+    window.closeAIChat = function() {
+        const aiSidebar = document.getElementById('aiChatSidebar');
+        if (!aiSidebar) return;
+        aiSidebar.classList.remove('active');
+    };
+
+    window.sendMessage = function(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        const userMsgDiv = document.createElement('div');
+        userMsgDiv.className = 'user-message';
+        userMsgDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
+        chatMessages.appendChild(userMsgDiv);
+
+        chatInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'ai-message loading';
+        loadingDiv.innerHTML = `<p><i class="fa-solid fa-spinner" style="animation: spin 1s linear infinite;"></i> Thinking...</p>`;
+        chatMessages.appendChild(loadingDiv);
+
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message})
+        })
+        .then(res => res.json())
+        .then(data => {
+            loadingDiv.remove();
+            if (data.success) {
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = 'ai-message';
+                aiMsgDiv.innerHTML = `<p>${escapeHtml(data.message)}</p>`;
+                chatMessages.appendChild(aiMsgDiv);
+            } else {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'ai-message error';
+                errorDiv.innerHTML = `<p><strong>Error:</strong> ${escapeHtml(data.error)}</p>`;
+                chatMessages.appendChild(errorDiv);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        })
+        .catch(err => {
+            loadingDiv.remove();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'ai-message error';
+            errorDiv.innerHTML = `<p><strong>Error:</strong> ${escapeHtml(err.message)}</p>`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    };
+
+    window.escapeHtml = function(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+}
+
+function showSection(sectionId, element) {
+    // Hide all sections
+    document.querySelectorAll('.dashboard-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Deactivate all buttons
+    document.querySelectorAll('.hub-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected section
+    document.getElementById(sectionId).classList.add('active');
+    
+    // Activate clicked button
+    element.classList.add('active');
+}
+
+// Initialize components
+document.addEventListener('DOMContentLoaded', function() {
+    initAIChat();
+});
+</script>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+

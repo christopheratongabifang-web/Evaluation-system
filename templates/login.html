@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container glass">
+    <h2 style="margin-bottom: 2rem; text-align: center;">Welcome Back</h2>
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="username">Username / Email</label>
+            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username or email" value="{{ username|default('') }}">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" autocomplete="current-password">
+                <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="remember" name="remember" style="accent-color: var(--primary);" {% if remember %}checked{% endif %}>
+                    <label for="remember" style="margin: 0; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">Remember me</label>
+                </div>
+                <a href="{{ url_for('forgot_password') }}" style="color: var(--text-secondary); font-size: 0.875rem; text-decoration: none;">Forgot Password?</a>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+        Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--primary); text-decoration: none;">Register</a>
+    </p>
+</div>
+{% endblock %}

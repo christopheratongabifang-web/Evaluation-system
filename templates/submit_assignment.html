@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Submit Assignment: {{ assignment.title }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    {% if assignment.description %}
+                    <div class="alert alert-info">
+                        <h5>Instructions:</h5>
+                        <p>{{ assignment.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="assignment-details mb-4">
+                        {% if assignment.start_date %}
+                        <p><strong>Start Date:</strong> {{ assignment.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% endif %}
+                        {% if assignment.end_date %}
+                        <p><strong>Deadline:</strong> {{ assignment.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="form-group mb-4">
+                            <label for="submission_pdf" class="form-label fw-bold">Upload Your Work (PDF)</label>
+                            <input type="file" class="form-control form-control-lg" id="submission_pdf" name="submission_pdf" accept=".pdf">
+                            <small class="text-muted">You can upload a PDF file containing your assignment.</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="content" class="form-label fw-bold">OR Paste Your Submission Text Below</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" 
+                                      placeholder="Alternatively, paste your assignment here..."></textarea>
+                            <small class="text-muted">If you upload a PDF, this text area can be left empty.</small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('list_assignments') }}" class="btn btn-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-upload"></i> Submit Assignment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

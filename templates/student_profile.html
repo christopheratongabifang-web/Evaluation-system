@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass p-5" style="border-radius: 2rem;">
+                <div class="text-center mb-5">
+                    <!-- Profile Picture Preview -->
+                    <div style="position: relative; display: inline-block; margin: 0 auto 1.5rem;">
+                        {% if profile and profile.profile_picture %}
+                            <img id="avatarPreview" src="{{ url_for('uploaded_file', filename=profile.profile_picture) }}"
+                                 alt="Profile Picture"
+                                 style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); box-shadow: 0 0 30px rgba(79,70,229,0.5);">
+                        {% else %}
+                            <div id="avatarPlaceholder" style="width: 110px; height: 110px; background: linear-gradient(135deg, var(--primary), #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(79,70,229,0.4);">
+                                <i class="fas fa-user-graduate fa-3x text-white"></i>
+                            </div>
+                            <img id="avatarPreview" src="" alt="" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); box-shadow: 0 0 30px rgba(79,70,229,0.5); display: none;">
+                        {% endif %}
+                        <label for="profile_picture" style="position: absolute; bottom: 4px; right: 4px; background: var(--primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.5);" title="Upload Photo">
+                            <i class="fas fa-camera" style="font-size: 0.85rem;"></i>
+                        </label>
+                    </div>
+
+                    <h2 style="font-weight: 800; letter-spacing: -0.02em;">Student Profile</h2>
+                    <p style="color: var(--text-secondary);">{% if profile %}Manage your academic identity{% else %}Create your student profile{% endif %}</p>
+
+                    {% if not (profile and profile.profile_picture) %}
+                    <div class="glass mt-3 mb-2" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4); border-radius: 0.75rem; padding: 0.85rem 1.25rem; display: inline-flex; align-items: center; gap: 0.75rem; max-width: 380px;">
+                        <i class="fas fa-camera" style="color: var(--warning); font-size: 1.2rem; flex-shrink: 0;"></i>
+                        <span style="font-size: 0.9rem; color: var(--text-secondary); text-align: left;">Please add a profile picture so your admin and teachers can recognise you.</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="next" value="{{ next_url or '' }}">
+
+                    <!-- Hidden file input -->
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display:none;"
+                           onchange="previewAvatar(this)">
+
+                    <div class="mb-4">
+                        <label for="student_id" class="form-label" style="font-weight: 600; color: var(--text-primary); margin-left: 0.5rem;">
+                            <i class="fas fa-id-card me-2 text-primary"></i> Student ID
+                        </label>
+                        <input type="text" class="form-control glass" id="student_id" name="student_id"
+                               value="{{ profile.student_id if profile else '' }}"
+                               placeholder="e.g., SC22A700"
+                               style="padding: 1rem; border-radius: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);" required>
+                        <small style="display: block; margin-top: 0.5rem; margin-left: 0.5rem; color: var(--text-secondary);">Your unique identification number</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="full_name" class="form-label" style="font-weight: 600; color: var(--text-primary); margin-left: 0.5rem;">
+                            <i class="fas fa-signature me-2 text-primary"></i> Full Name
+                        </label>
+                        <input type="text" class="form-control glass" id="full_name" name="full_name"
+                               value="{{ profile.full_name if profile else '' }}"
+                               placeholder="Your official full name"
+                               style="padding: 1rem; border-radius: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);" required>
+                        <small style="display: block; margin-top: 0.5rem; margin-left: 0.5rem; color: var(--text-secondary);">As it appears on your official records</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="student_class" class="form-label" style="font-weight: 600; color: var(--text-primary); margin-left: 0.5rem;">
+                            <i class="fas fa-chalkboard-user me-2 text-primary"></i> Academic Class
+                        </label>
+                        <select class="form-select glass" id="student_class" name="student_class"
+                                style="padding: 1rem; border-radius: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border); color: var(--text-primary);" required>
+                            <option value="" disabled {% if not profile or not profile.student_class %}selected{% endif %}>Select your class...</option>
+                            {% for c in academic_classes %}
+                            <option value="{{ c.name }}" {% if profile and profile.student_class == c.name %}selected{% endif %}>{{ c.display_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small style="display: block; margin-top: 0.5rem; margin-left: 0.5rem; color: var(--text-secondary);">Select the class you are currently enrolled in.</small>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-left: 0.5rem;">
+                            <i class="fas fa-envelope me-2 text-primary"></i> Account Email
+                        </label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" disabled
+                               style="padding: 1rem; border-radius: 1rem; background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border); opacity: 0.6; cursor: not-allowed;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" style="padding: 1rem; border-radius: 1.25rem; font-weight: 700; box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.3);">
+                        <i class="fas fa-save me-2"></i> {% if profile %}Update Profile{% else %}Complete Registration{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

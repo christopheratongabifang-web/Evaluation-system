@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-5 mb-4">Plagiarism Checker</h1>
+
+    <div class="card shadow-lg mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Check for Plagiarism</h5>
+        </div>
+        <div class="card-body p-4">
+            <p class="text-muted mb-3">Compare student responses within an evaluation to detect similarities and potential plagiarism.</p>
+            <form method="POST">
+                <div class="form-group mb-4">
+                    <label for="evaluation_id" class="form-label fw-bold">Select Evaluation</label>
+                    <select class="form-select form-select-lg" id="evaluation_id" name="evaluation_id" required>
+                        <option value="">-- Choose an Evaluation --</option>
+                        {% for eval in evaluations %}
+                        <option value="{{ eval.id }}">{{ eval.title }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">This will compare student answers to detect similarities</small>
+                </div>
+                <button type="submit" class="btn btn-danger btn-lg">
+                    <i class="fas fa-search"></i> Run Plagiarism Check
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if comparisons %}
+    <div class="card shadow-lg">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Plagiarism Analysis Results</h5>
+        </div>
+        <div class="card-body">
+            {% if comparisons|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student 1</th>
+                            <th>Student 2</th>
+                            <th>Similarity %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comparison in comparisons %}
+                        <tr>
+                            <td>{{ comparison.student1 }}</td>
+                            <td>{{ comparison.student2 }}</td>
+                            <td>
+                                <span class="badge {% if comparison.similarity >= 80 %}bg-danger{% elif comparison.similarity >= 70 %}bg-warning{% else %}bg-info{% endif %}">
+                                    {{ comparison.similarity }}%
+                                </span>
+                            </td>
+                            <td>
+                                {% if comparison.similarity >= 80 %}
+                                    <span class="badge bg-danger">SIMILAR WORK</span>
+                                {% elif comparison.similarity >= 70 %}
+                                    <span class="badge bg-warning">REVIEW NEEDED</span>
+                                {% else %}
+                                    <span class="badge bg-info">WARNING</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mt-3">
+                <strong>Legend:</strong> 
+                <span class="badge bg-danger">SIMILAR WORK</span> &gt; 80% • 
+                <span class="badge bg-warning">REVIEW NEEDED</span> 70-80% •
+                <span class="badge bg-info">WARNING</span> &lt; 70%
+            </p>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                <p class="mb-0">No similar responses found. All student responses appear to be unique.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

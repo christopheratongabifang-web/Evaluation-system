@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass" style="padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary);">
+    <div>
+        <h1 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">{{ book.title }}</h1>
+        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">Reading: {{ book.author }}</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <button id="mark-finished" class="btn btn-success" style="padding: 0.6rem 1.2rem;">
+            <i class="fa-solid fa-check"></i> Mark Finished
+        </button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.6rem 1.2rem;">
+            <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="reader-container" style="min-height: 85vh; margin-bottom: 2rem;">
+    <iframe id="pdf-iframe" src="{{ url_for('book_file', book_id=book.id) }}" style="width:100%; height:85vh; border:none; background: #334155;"></iframe>
+</div>
+
+<script>
+    function saveProgress(page, status) {
+        fetch("{{ url_for('update_progress', book_id=book.id) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                current_page: page,
+                status: status
+            })
+        });
+    }
+
+    document.getElementById('mark-finished').addEventListener('click', function() {
+        saveProgress(1, 'finished');
+        alert('Book marked as finished!');
+        window.location.href = "{{ url_for('dashboard') }}";
+    });
+</script>
+{% endblock %}

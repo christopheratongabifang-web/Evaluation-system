@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1 style="font-size: 2rem;">Messages from Admin</h1>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Private conversation with admin</p>
+    </div>
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="glass" style="padding: 1.5rem; margin-top: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-user-shield" style="font-size: 1.5rem;"></i>
+        <div>
+            <h2 style="margin: 0;">{{ admin.username }}</h2>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">Admin</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; max-height: 400px; overflow-y: auto;">
+        {% if messages %}
+            {% for msg in messages %}
+            <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; background: {% if msg.sender_id == current_user.id %}var(--primary){% else %}#E5E7EB{% endif %}; color: var(--text);">
+                <strong style="display: block; font-size: 0.85rem; margin-bottom: 0.25rem;">
+                    {% if msg.sender_id == current_user.id %}You{% else %}{{ admin.username }}{% endif %}
+                </strong>
+                <p style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{{ msg.content }}</p>
+                <span style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    {{ msg.created_at.strftime('%b %d, %Y %I:%M %p') }}
+                </span>
+            </div>
+            {% endfor %}
+        {% else %}
+        <p style="color: var(--text-secondary); text-align: center; margin: 0;">No messages yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Send Message Form -->
+    <form action="{{ url_for('send_message', recipient_id=admin.id) }}" method="POST">
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label for="content" style="color: var(--text-secondary); font-size: 0.9rem;">Your Reply</label>
+            <textarea name="content" id="content" placeholder="Type your message..." required style="min-height: 100px; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: 0.5rem; background: var(--surface); color: var(--text); font-family: inherit;"></textarea>
+            <button type="submit" class="btn btn-primary">Send Reply</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

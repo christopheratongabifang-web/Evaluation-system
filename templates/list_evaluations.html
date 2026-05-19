@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header & Category Filter -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-7">
+            <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Evaluation <span style="color: var(--primary);">Portal</span></h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Track your academic performance and take tests</p>
+        </div>
+        <div class="col-md-5 text-end d-flex gap-3 justify-content-end">
+            <!-- Subject Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="subjectDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.75rem 1.5rem; border-radius: 1rem; font-weight: 600;">
+                    <i class="fas fa-filter me-2"></i> {{ stats.category_name }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end glass shadow-lg" aria-labelledby="subjectDropdown" style="border-radius: 1rem; border: 1px solid var(--surface-border); margin-top: 0.5rem; padding: 0.5rem;">
+                    <li><a class="dropdown-item rounded-3" href="{{ url_for('list_evaluations') }}">All Subjects</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    {% for cat in categories %}
+                    <li><a class="dropdown-item rounded-3 {% if selected_category == cat.id|string %}active{% endif %}" href="{{ url_for('list_evaluations', category_id=cat.id) }}">{{ cat.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <a href="{{ url_for('student_profile') }}" class="user-tag" style="text-decoration: none; display: inline-flex; padding: 0.75rem 1.25rem;">
+                <i class="fas fa-user-graduate me-2"></i> Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Panel -->
+    <div class="glass p-4 mb-5" style="border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+        <div class="row text-center">
+            <div class="col-md-4 border-end" style="border-color: var(--surface-border) !important;">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Subject</h6>
+                <h4 style="margin: 0; font-weight: 700; color: var(--primary);">{{ stats.category_name }}</h4>
+            </div>
+            <div class="col-md-4 border-end" style="border-color: var(--surface-border) !important;">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Tests Completed</h6>
+                <h4 style="margin: 0; font-weight: 700;">{{ stats.total_taken }}</h4>
+            </div>
+            <div class="col-md-4">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Average Score</h6>
+                <h4 style="margin: 0; font-weight: 700; color: #10b981;">{{ stats.avg_score }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    {% if not profile or not profile.student_id or not profile.full_name %}
+    <div class="glass p-4 mb-5" style="border-left: 4px solid var(--warning); border-radius: 1rem;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle text-warning fa-2x me-4"></i>
+            <div>
+                <h5 style="margin: 0; font-weight: 700;">Profile Required</h5>
+                <p style="margin: 0; color: var(--text-secondary);">You must complete your profile before starting any evaluation.</p>
+            </div>
+            <a href="{{ url_for('student_profile') }}" class="btn btn-warning ms-auto" style="border-radius: 0.75rem; font-weight: 600;">Complete Now</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if evaluations %}
+        <div class="row">
+            {% for evaluation in evaluations %}
+            {% set attempt = attempt_dict.get(evaluation.id) %}
+            <div class="col-md-6 mb-4">
+                <div class="glass h-100 p-4 d-flex flex-column" style="border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                                {{ evaluation.title }}
+                            </h3>
+                            {% if evaluation.description %}
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">{{ evaluation.description[:100] }}{% if evaluation.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                        {% if attempt %}
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.5rem 0.75rem; border-radius: 0.75rem;">
+                                <i class="fas fa-check-circle me-1"></i> Completed
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-flex flex-wrap gap-3 mb-4">
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 0.4rem 0.8rem; border-radius: 0.5rem;">
+                                <i class="fas fa-award text-primary me-1"></i> {{ evaluation.total_marks }} Marks
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 0.4rem 0.8rem; border-radius: 0.5rem;">
+                                <i class="fas fa-list-ol text-info me-1"></i> {{ evaluation.questions|length }} Questions
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 0.4rem 0.8rem; border-radius: 0.5rem;">
+                                <i class="fas fa-clock text-warning me-1"></i> {{ evaluation.time_limit_minutes }}m
+                            </div>
+                        </div>
+
+                        {% if attempt %}
+                        <div class="p-3 mb-3" style="background: rgba(16, 185, 129, 0.03); border-radius: 1rem; border: 1px dashed rgba(16, 185, 129, 0.2);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span style="font-size: 1.1rem; font-weight: 700; color: #10b981;">
+                                    Score: {{ attempt.total_marks_obtained }} / {{ evaluation.total_marks }}
+                                </span>
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    {{ "%.1f"|format(attempt.total_marks_obtained / evaluation.total_marks * 100) }}%
+                                </span>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('evaluation_result', eval_id=evaluation.id, attempt_id=attempt.id) }}" class="btn btn-outline-info w-100" style="border-radius: 1rem; padding: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-poll me-2"></i> Detailed Results
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('start_evaluation', eval_id=evaluation.id) }}" class="btn btn-primary w-100" style="border-radius: 1rem; padding: 0.75rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);">
+                            <i class="fas fa-play me-2"></i> Start Evaluation
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass text-center p-5" style="border-radius: 2rem;">
+            <div style="width: 100px; height: 100px; background: rgba(79, 70, 229, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                <i class="fas fa-file-invoice fa-3x" style="color: var(--primary); opacity: 0.5;"></i>
+            </div>
+            <h2 style="font-weight: 800; margin-bottom: 1rem;">No Evaluations Here</h2>
+            <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2.5rem;">There are no evaluations available for this subject yet. Try selecting another one!</p>
+            <a href="{{ url_for('list_evaluations') }}" class="btn btn-outline-light" style="padding: 0.75rem 2rem; border-radius: 1rem; border: 1px solid var(--surface-border);">
+                View All Subjects
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

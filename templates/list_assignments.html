@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Available <span style="color: var(--primary);">Assignments</span></h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Submit your work and track your progress</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('student_profile') }}" class="user-tag" style="text-decoration: none; display: inline-flex; padding: 0.75rem 1.25rem;">
+                <i class="fas fa-user-graduate me-2"></i> My Academic Profile
+            </a>
+        </div>
+    </div>
+
+    {% if not profile or not profile.student_id or not profile.full_name %}
+    <div class="glass p-4 mb-5" style="border-left: 4px solid var(--warning); border-radius: 1rem;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle text-warning fa-2x me-4"></i>
+            <div>
+                <h5 style="margin: 0; font-weight: 700;">Profile Incomplete</h5>
+                <p style="margin: 0; color: var(--text-secondary);">You must complete your student profile before you can submit assignments.</p>
+            </div>
+            <a href="{{ url_for('student_profile') }}" class="btn btn-warning ms-auto" style="border-radius: 0.75rem; font-weight: 600;">
+                Complete Profile
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if assignments %}
+        <div class="row">
+            {% for assignment in assignments %}
+            {% set submission = submission_dict.get(assignment.id) %}
+            <div class="col-md-6 mb-4">
+                <div class="glass h-100 p-4 d-flex flex-column" style="border-radius: 1.5rem; transition: transform 0.3s ease; border: 1px solid var(--surface-border);">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                                {{ assignment.title }}
+                            </h3>
+                            {% if assignment.description %}
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">{{ assignment.description[:120] }}{% if assignment.description|length > 120 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                        {% if submission %}
+                            <span class="badge bg-success-soft" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.5rem 0.75rem; border-radius: 0.75rem;">
+                                <i class="fas fa-check-circle me-1"></i> Submitted
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-flex gap-3 mb-4">
+                            {% if assignment.file_path %}
+                                <a href="{{ url_for('uploaded_file', filename=assignment.file_path) }}" target="_blank" class="btn btn-sm btn-outline-danger" style="border-radius: 0.75rem; font-size: 0.8rem;">
+                                    <i class="fas fa-file-pdf me-1"></i> Instructions
+                                </a>
+                            {% endif %}
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                <i class="fas fa-clock me-1"></i> Due: {{ assignment.end_date.strftime('%b %d, %H:%M') }}
+                            </div>
+                        </div>
+
+                        {% if submission %}
+                            <div class="p-3 mb-3" style="background: rgba(255,255,255,0.03); border-radius: 1rem; border: 1px dashed var(--surface-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                        Submitted on {{ submission.submitted_at.strftime('%b %d') }}
+                                    </span>
+                                    {% if submission.file_path %}
+                                    <a href="{{ url_for('uploaded_file', filename=submission.file_path) }}" target="_blank" class="text-primary" style="text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+                                        View PDF <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if submission.is_graded %}
+                                    <div class="pt-2 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span style="font-weight: 700; color: #10b981;">Result: {{ submission.grade }}%</span>
+                                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">Graded</span>
+                                        </div>
+                                        {% if submission.feedback %}
+                                            <p style="font-size: 0.85rem; color: var(--text-secondary); font-style: italic; margin: 0; background: rgba(0,0,0,0.1); padding: 0.75rem; border-radius: 0.75rem;">
+                                                "{{ submission.feedback }}"
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-2">
+                                        <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">Waiting for Grading</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="btn btn-outline-light w-50" style="border-radius: 1rem; padding: 0.75rem;">
+                                    <i class="fas fa-file-alt me-1"></i> Details
+                                </a>
+                                <button class="btn btn-secondary w-50" disabled style="border-radius: 1rem; padding: 0.75rem; opacity: 0.5;">
+                                    <i class="fas fa-check"></i> Submitted
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="btn btn-outline-light w-50" style="border-radius: 1rem; padding: 0.75rem;">
+                                    <i class="fas fa-file-alt me-1"></i> Details
+                                </a>
+                                <a href="{{ url_for('submit_assignment', assignment_id=assignment.id) }}" class="btn btn-primary w-50" style="border-radius: 1rem; padding: 0.75rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);">
+                                    <i class="fas fa-upload me-1"></i> Submit
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass text-center p-5" style="border-radius: 2rem;">
+            <div style="width: 100px; height: 100px; background: rgba(79, 70, 229, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                <i class="fas fa-tasks fa-3x" style="color: var(--primary); opacity: 0.5;"></i>
+            </div>
+            <h2 style="font-weight: 800; margin-bottom: 1rem;">No Assignments Available</h2>
+            <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2.5rem;">There are no active assignments at the moment. Great job keeping your plate clear!</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light" style="padding: 0.75rem 2rem; border-radius: 1rem; border: 1px solid var(--surface-border);">
+                Return to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

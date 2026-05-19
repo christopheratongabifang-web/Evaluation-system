@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-7">
+            <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Review <span style="color: var(--primary);">Submissions</span></h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Assignment: {{ assignment.title }}</p>
+        </div>
+        <div class="col-md-5 text-end d-flex gap-3 justify-content-end">
+            {% if submissions|length >= 2 %}
+                <form method="POST" action="{{ url_for('check_assignment_plagiarism', assignment_id=assignment.id) }}">
+                    <button type="submit" class="btn btn-warning" style="padding: 0.75rem 1.5rem; border-radius: 1rem; font-weight: 600;" onclick="return confirm('This will check plagiarism among all submissions. Continue?')">
+                        <i class="fas fa-search me-2"></i> Check Plagiarism
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('admin_assignments') }}" class="btn btn-outline" style="padding: 0.75rem 1.5rem; border-radius: 1rem;">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="glass p-4 mb-5" style="border-radius: 1.5rem; border: 1px solid var(--surface-border);">
+        <div class="row text-center">
+            <div class="col-md-4 border-end" style="border-color: var(--surface-border) !important;">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Total Submissions</h6>
+                <h4 style="margin: 0; font-weight: 700; color: var(--primary);">{{ submissions|length }}</h4>
+            </div>
+            <div class="col-md-4 border-end" style="border-color: var(--surface-border) !important;">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Plagiarism Checked</h6>
+                <h4 style="margin: 0; font-weight: 700;">{{ 'Completed' if plagiarism_check and plagiarism_check.status == 'completed' else 'Not Started' }}</h4>
+            </div>
+            <div class="col-md-4">
+                <h6 style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Deadline</h6>
+                <h4 style="margin: 0; font-weight: 700; color: var(--warning);">
+                    {{ assignment.end_date.strftime('%b %d, %H:%M') if assignment.end_date else 'No Deadline' }}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    {% if submissions %}
+        <div class="glass p-0 mb-5" style="border-radius: 1.5rem; overflow: hidden; border: 1px solid var(--surface-border);">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" style="color: var(--text-primary);">
+                    <thead style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--surface-border);">
+                        <tr>
+                            <th style="padding: 1.25rem;">Student</th>
+                            <th style="padding: 1.25rem;">Submitted At</th>
+                            <th style="padding: 1.25rem;">Status</th>
+                            <th style="padding: 1.25rem;">Result</th>
+                            <th style="padding: 1.25rem; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                        <tr style="border-bottom: 1px solid var(--surface-border);">
+                            <td style="padding: 1.25rem;">
+                                <div style="font-weight: 700;">{{ submission.student_profile.full_name }}</div>
+                                <small style="color: var(--text-secondary);">ID: {{ submission.student_profile.student_id }}</small>
+                            </td>
+                            <td style="padding: 1.25rem; color: var(--text-secondary);">
+                                {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td style="padding: 1.25rem;">
+                                {% if submission.is_graded %}
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">Graded</span>
+                                {% else %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1.25rem;">
+                                {% if submission.is_graded %}
+                                    <div style="font-weight: 700; color: #10b981;">{{ submission.grade }}%</div>
+                                {% else %}
+                                    <div style="opacity: 0.3;">--</div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1.25rem; text-align: right;">
+                                <button class="btn btn-sm btn-primary" style="border-radius: 0.75rem; padding: 0.5rem 1rem;" 
+                                        onclick="viewSubmission('{{ submission.student_profile.full_name }}', `{{ submission.content|replace('`', '\\`') }}`, '{{ submission.file_path }}', '{{ submission.id }}', '{{ submission.grade or '' }}', `{{ submission.feedback|replace('`', '\\`') or '' }}`)">
+                                    <i class="fas fa-eye me-1"></i> Review & Grade
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if results %}
+        <div class="mb-5">
+            <h3 style="font-weight: 800; margin-bottom: 1.5rem;">Plagiarism <span style="color: #ef4444;">Red Flags</span></h3>
+            <div class="glass p-0" style="border-radius: 1.5rem; overflow: hidden; border: 1px solid var(--surface-border);">
+                <table class="table mb-0">
+                    <thead style="background: rgba(239, 68, 68, 0.05);">
+                        <tr>
+                            <th style="padding: 1rem;">Student 1</th>
+                            <th style="padding: 1rem;">Student 2</th>
+                            <th style="padding: 1rem; text-align: right;">Similarity Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr style="border-bottom: 1px solid var(--surface-border);">
+                            <td style="padding: 1rem;">{{ result.submission1.student_profile.full_name }}</td>
+                            <td style="padding: 1rem;">{{ result.submission2.student_profile.full_name }}</td>
+                            <td style="padding: 1rem; text-align: right;">
+                                <span class="badge {% if result.similarity_percentage > 70 %}bg-danger{% elif result.similarity_percentage > 50 %}bg-warning text-dark{% else %}bg-success{% endif %}" style="padding: 0.5rem 1rem; border-radius: 0.75rem;">
+                                    {{ "%.1f"|format(result.similarity_percentage) }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="glass text-center p-5" style="border-radius: 2rem;">
+            <i class="fas fa-inbox fa-3x mb-3" style="opacity: 0.2;"></i>
+            <h4 style="font-weight: 700;">No Submissions Yet</h4>
+            <p style="color: var(--text-secondary);">Students haven't submitted any work for this assignment.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Premium Grading Modal -->
+<div class="modal fade" id="submissionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content glass" style="border-radius: 2rem; border: 1px solid var(--surface-border); background: #0f172a;">
+            <div class="modal-header border-0 p-4">
+                <h4 class="modal-title" style="font-weight: 800;">Submission Review</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Submission Content -->
+                    <div class="col-lg-7">
+                        <div class="p-4" style="background: rgba(255,255,255,0.02); border-radius: 1.5rem; border: 1px solid var(--surface-border); height: 100%;">
+                            <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem; display: block;">Student Content</label>
+                            <div id="submissionContent" style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6; color: var(--text-primary); max-height: 500px; overflow-y: auto;"></div>
+                            
+                            <div id="pdfLinkContainer" class="mt-4 pt-4 border-top" style="border-color: var(--surface-border) !important;">
+                                <!-- PDF Link injected here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grading Form -->
+                    <div class="col-lg-5">
+                        <div class="glass p-4" style="border-radius: 1.5rem; height: 100%;">
+                            <h5 style="font-weight: 700; margin-bottom: 1.5rem;"><i class="fas fa-award me-2 text-primary"></i> Assessment</h5>
+                            <form id="gradingForm" method="POST">
+                                <div class="form-group mb-4">
+                                    <label for="grade" style="font-size: 0.85rem; color: var(--text-secondary);">GRADE (PERCENTAGE %)</label>
+                                    <input type="number" class="form-control" id="grade" name="grade" min="0" max="100" step="0.1" required style="padding: 1rem; border-radius: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); color: white;">
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="feedback" style="font-size: 0.85rem; color: var(--text-secondary);">CONSTRUCTIVE FEEDBACK</label>
+                                    <textarea class="form-control" id="feedback" name="feedback" rows="8" placeholder="Enter your comments for the student..." style="padding: 1rem; border-radius: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); color: white;"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100" style="padding: 1rem; border-radius: 1rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);">
+                                    <i class="fas fa-save me-2"></i> Save Assessment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewSubmission(studentName, content, filePath, submissionId, grade, feedback) {
+    document.querySelector('#submissionModal .modal-title').innerHTML = 'Review Submission: <span style="color: var(--primary);">' + studentName + '</span>';
+    document.getElementById('submissionContent').textContent = content;
+    
+    // Set form action
+    document.getElementById('gradingForm').action = '/admin/assignments/grade/' + submissionId;
+    document.getElementById('grade').value = grade;
+    document.getElementById('feedback').value = feedback;
+
+    const pdfContainer = document.getElementById('pdfLinkContainer');
+    if (filePath && filePath !== 'None') {
+        pdfContainer.innerHTML = '<a href="/uploads/' + filePath + '" target="_blank" class="btn btn-danger w-100" style="border-radius: 1rem; padding: 0.75rem;"><i class="fas fa-file-pdf me-2"></i> View Attached PDF Evidence</a>';
+        pdfContainer.style.display = 'block';
+    } else {
+        pdfContainer.style.display = 'none';
+    }
+    
+    new bootstrap.Modal(document.getElementById('submissionModal')).show();
+}
+</script>
+{% endblock %}

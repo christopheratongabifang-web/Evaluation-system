@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1 style="font-size: 2rem;">Messages</h1>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Send private messages to students</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <form method="POST" action="{{ url_for('clear_all_messages') }}" onsubmit="return confirm('Are you sure you want to delete ALL messages from every student? This cannot be undone.')">
+            <button type="submit" class="btn btn-danger">
+                <i class="fa-solid fa-trash me-1"></i> Clear All Messages
+            </button>
+        </form>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+    <!-- Students List -->
+    <div class="glass" style="padding: 1.5rem; height: fit-content;">
+        <h2 style="margin-top: 0;">Students</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for student in students %}
+            <a href="#student-{{ student.id }}" onclick="selectStudent({{ student.id }}, '{{ student.username }}')" 
+               class="btn btn-outline" style="text-align: left; justify-content: flex-start;">
+                <i class="fa-solid fa-user"></i> {{ student.username }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Conversation -->
+    <div id="conversation-panel" class="glass" style="padding: 1.5rem; display: none; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 id="student-name" style="margin: 0;"></h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <form id="clear-form" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete all messages in this conversation?')">
+                    <button type="submit" class="btn btn-sm btn-danger" style="padding: 0.5rem 1rem;"><i class="fa-solid fa-trash me-1"></i> Clear Chat</button>
+                </form>
+                <button onclick="closeConversation()" class="btn btn-outline" style="padding: 0.5rem 1rem;">Close</button>
+            </div>
+        </div>
+
+        <div id="messages-container" style="flex: 1; overflow-y: auto; margin-bottom: 1rem; max-height: 400px; padding: 1rem; background: var(--surface); border-radius: 0.75rem; border: 1px solid var(--surface-border);">
+            <!-- Messages will be loaded here -->
+        </div>
+
+        <form id="message-form" method="POST" onsubmit="sendMessage(event)" style="display: flex; gap: 0.5rem;">
+            <textarea name="content" placeholder="Type your message..." required style="flex: 1; min-height: 80px; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: 0.5rem; background: var(--surface); color: var(--text);"></textarea>
+            <button type="submit" class="btn btn-primary" style="align-self: flex-end;">Send</button>
+        </form>
+    </div>
+
+    {% if not students %}
+    <div class="glass" style="padding: 1.5rem; grid-column: 2;">
+        <p style="color: var(--text-secondary); text-align: center;">No students registered yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let currentStudentId = null;
+
+function selectStudent(studentId, studentName) {
+    currentStudentId = studentId;
+    document.getElementById('student-name').textContent = studentName;
+    document.getElementById('clear-form').action = '/clear_conversation/' + studentId;
+    document.getElementById('conversation-panel').style.display = 'flex';
+    loadMessages(studentId);
+}
+
+function closeConversation() {
+    document.getElementById('conversation-panel').style.display = 'none';
+    currentStudentId = null;
+}
+
+function loadMessages(studentId) {
+    const container = document.getElementById('messages-container');
+    container.innerHTML = '';
+    
+    const convElement = document.querySelector(`[data-student-id="${studentId}"]`);
+    if (convElement) {
+        const messagesHtml = convElement.getAttribute('data-messages');
+        container.innerHTML = messagesHtml || '<p style="color: var(--text-secondary);">No messages yet.</p>';
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function sendMessage(event) {
+    event.preventDefault();
+    if (!currentStudentId) return;
+    
+    const form = document.getElementById('message-form');
+    const formData = new FormData(form);
+    
+    fetch(`/send_message/${currentStudentId}`, {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            form.reset();
+            location.reload();
+        }
+    });
+}
+
+// Store conversation data as data attributes
+{% for student_id, (student, msgs) in conversations.items() %}
+document.addEventListener('DOMContentLoaded', function() {
+    const convDiv = document.createElement('div');
+    convDiv.setAttribute('data-student-id', {{ student_id }});
+    
+    let messagesHtml = '';
+    {% for msg in msgs %}
+    messagesHtml += `
+        <div style="margin-bottom: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; background: {% if msg.sender_id == current_user.id %}var(--primary){% else %}var(--surface-border){% endif %}; color: var(--text); position: relative;">
+            <form method="POST" action="/delete_message/{{ msg.id }}" style="position: absolute; top: 0.5rem; right: 0.5rem; margin: 0;">
+                <button type="submit" class="btn btn-sm" style="padding: 0.15rem 0.4rem; background: rgba(0,0,0,0.3); color: white; border: none; border-radius: 0.25rem;" title="Delete Message" onclick="return confirm('Delete this message?')"><i class="fa-solid fa-xmark"></i></button>
+            </form>
+            <strong style="display: block; font-size: 0.85rem; margin-bottom: 0.25rem; padding-right: 2rem;">
+                {% if msg.sender_id == current_user.id %}You{% else %}{{ student.username }}{% endif %}
+            </strong>
+            {{ msg.content }}
+            <span style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                {{ msg.created_at.strftime('%b %d, %I:%M %p') }}
+            </span>
+        </div>
+    `;
+    {% endfor %}
+    
+    convDiv.setAttribute('data-messages', messagesHtml);
+    document.body.appendChild(convDiv);
+});
+{% endfor %}
+</script>
+
+{% endblock %}

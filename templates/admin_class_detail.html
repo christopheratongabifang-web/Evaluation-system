@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header & Navigation -->
+    <div class="glass p-4 mb-5" style="border-radius: 1.25rem; border-left: 6px solid var(--primary);">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-primary px-3 py-1 mb-2" style="font-size: 0.9rem; font-weight: 600;">Class Details & Analytics</span>
+                <h1 class="display-5 mb-0" style="color: var(--text-primary); font-weight: 800;">{{ class_name }}</h1>
+                <p class="text-secondary mt-1 mb-0" style="font-size: 1.1rem;">Manage students, assessments, and aggregate performance reports.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a href="{{ url_for('admin_classes') }}" class="btn btn-outline me-2">
+                    <i class="fa-solid fa-arrow-left me-1"></i> All Classes
+                </a>
+                <a href="{{ url_for('create_evaluation', target_class=class_name) }}" class="btn btn-success">
+                    <i class="fa-solid fa-plus me-1"></i> New Evaluation
+                </a>
+                <a href="{{ url_for('create_assignment', target_class=class_name) }}" class="btn btn-info text-white">
+                    <i class="fa-solid fa-tasks me-1"></i> New Assignment
+                </a>
+                <a href="{{ url_for('generate_class_report_pdf', class_name=class_name) }}" class="btn btn-warning text-dark fw-bold ms-2 shadow-sm" title="Download Master PDF with Pass/Fail Statistics">
+                    <i class="fa-solid fa-file-pdf me-2"></i> Master Report (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Roster Table -->
+    <div class="glass p-4 mb-5" style="border-radius: 1.25rem;">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.1) !important;">
+            <h2 class="mb-0" style="font-weight: 700;">Enrolled Students ({{ student_stats|length }})</h2>
+        </div>
+
+        {% if student_stats %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="padding: 1rem;">Photo</th>
+                        <th style="padding: 1rem;">Student ID</th>
+                        <th style="padding: 1rem;">Full Name</th>
+                        <th style="padding: 1rem;">Email</th>
+                        <th style="padding: 1rem; text-align: center;">Eval Avg</th>
+                        <th style="padding: 1rem; text-align: center;">Assign Avg</th>
+                        <th style="padding: 1rem; text-align: center;">Status</th>
+                        <th style="padding: 1rem; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in student_stats %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">
+                            {% if stat.student.profile_picture %}
+                                <img src="{{ url_for('uploaded_file', filename=stat.student.profile_picture) }}"
+                                     alt="{{ stat.student.full_name }}"
+                                     style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                            {% else %}
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #7c3aed); display: flex; align-items: center; justify-content: center;" title="No photo">
+                                    <i class="fas fa-user text-white" style="font-size: 1.1rem;"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1.25rem 1rem;"><strong>{{ stat.student.student_id }}</strong></td>
+                        <td style="padding: 1.25rem 1rem;">{{ stat.student.full_name }}</td>
+                        <td style="padding: 1.25rem 1rem;">{{ stat.student.user.email }}</td>
+                        <td style="padding: 1.25rem 1rem; text-align: center;">
+                            <span class="badge {% if stat.avg_eval >= 50 %}bg-success{% elif stat.avg_eval > 0 %}bg-danger{% else %}bg-secondary{% endif %} p-2" style="font-size: 0.95rem;">
+                                {% if stat.avg_eval > 0 %}{{ stat.avg_eval }}%{% else %}-{% endif %}
+                            </span>
+                        </td>
+                        <td style="padding: 1.25rem 1rem; text-align: center;">
+                            <span class="badge {% if stat.avg_assign >= 50 %}bg-info text-dark{% elif stat.avg_assign > 0 %}bg-warning text-dark{% else %}bg-secondary{% endif %} p-2" style="font-size: 0.95rem;">
+                                {% if stat.avg_assign > 0 %}{{ stat.avg_assign }}/100{% else %}-{% endif %}
+                            </span>
+                        </td>
+                        <td style="padding: 1.25rem 1rem; text-align: center;">
+                            {% if stat.eval_count > 0 %}
+                                {% if stat.passed %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i> PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fa-solid fa-circle-xmark me-1"></i> FAIL</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">No Attempts</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1.25rem 1rem; text-align: right;">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('admin_view_student_profile', student_id=stat.student.id) }}" class="btn btn-sm btn-outline" title="View Full Profile">
+                                    <i class="fa-solid fa-user me-1"></i> Profile
+                                </a>
+                                <a href="{{ url_for('generate_student_report_card', student_id=stat.student.id) }}" class="btn btn-sm btn-primary" title="Student Report Card">
+                                    <i class="fa-solid fa-file-pdf me-1"></i> Report Card
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center py-4 mb-0" style="border-radius: 1rem;">
+            <i class="fa-solid fa-user-group fa-2x mb-2"></i>
+            <h4 class="alert-heading">No Students Enrolled</h4>
+            <p class="mb-0">Students who select <strong>{{ class_name }}</strong> during profile setup will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Assessments for this Class -->
+    <div class="row g-4 mb-5">
+        <!-- Evaluations -->
+        <div class="col-md-6">
+            <div class="glass p-4 h-100" style="border-radius: 1.25rem;">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.1) !important;">
+                    <h3 class="mb-0" style="font-weight: 700;"><i class="fa-solid fa-file-invoice me-2 text-success"></i> Evaluations</h3>
+                    <span class="badge bg-success">{{ evaluations|length }}</span>
+                </div>
+                {% if evaluations %}
+                <div class="d-flex flex-column gap-3">
+                    {% for eval in evaluations %}
+                    <div class="p-3 glass" style="border-radius: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h4 style="font-size: 1.15rem; font-weight: 600; margin: 0;">{{ eval.title }}</h4>
+                            <span class="badge {% if eval.target_class == 'All' %}bg-secondary{% else %}bg-info text-dark{% endif %}">{{ eval.target_class }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: rgba(255,255,255,0.05) !important; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span>Total Marks: {{ eval.total_marks }}</span>
+                            <a href="{{ url_for('evaluation_responses', eval_id=eval.id) }}" class="btn btn-sm btn-outline">View Responses</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-secondary text-center my-4">No evaluations scheduled specifically for this class.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assignments -->
+        <div class="col-md-6">
+            <div class="glass p-4 h-100" style="border-radius: 1.25rem;">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.1) !important;">
+                    <h3 class="mb-0" style="font-weight: 700;"><i class="fa-solid fa-tasks me-2 text-info"></i> Assignments</h3>
+                    <span class="badge bg-info text-dark">{{ assignments|length }}</span>
+                </div>
+                {% if assignments %}
+                <div class="d-flex flex-column gap-3">
+                    {% for assign in assignments %}
+                    <div class="p-3 glass" style="border-radius: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h4 style="font-size: 1.15rem; font-weight: 600; margin: 0;">{{ assign.title }}</h4>
+                            <span class="badge {% if assign.target_class == 'All' %}bg-secondary{% else %}bg-info text-dark{% endif %}">{{ assign.target_class }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: rgba(255,255,255,0.05) !important; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span>Submissions: {{ assign.submissions|length }}</span>
+                            <a href="{{ url_for('admin_assignment_submissions', assignment_id=assign.id) }}" class="btn btn-sm btn-outline">Grade Submissions</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-secondary text-center my-4">No assignments scheduled specifically for this class.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
