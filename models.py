@@ -39,6 +39,23 @@ class Book(db.Model):
     last_read_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='unread')
     current_page = db.Column(db.Integer, default=1)
+    progress_records = db.relationship('BookProgress', backref='book', lazy=True, cascade='all, delete-orphan')
+
+class BookProgress(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
+    status = db.Column(db.String(20), default='unread', nullable=False)
+    current_page = db.Column(db.Integer, default=1, nullable=False)
+    last_read_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref='book_progress_records')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'book_id', name='uq_book_progress_user_book'),
+    )
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

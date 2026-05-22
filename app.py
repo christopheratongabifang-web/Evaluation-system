@@ -1,6 +1,7 @@
 import os
 import re
 import io
+from types import SimpleNamespace
 from difflib import SequenceMatcher
 from pypdf import PdfReader
 import google.generativeai as genai
@@ -17,7 +18,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.units import inch
 from models import (
-    db, User, Book, Category, EvaluationTopic, Notification, Message, 
+    db, User, Book, BookProgress, Category, EvaluationTopic, Notification, Message, 
     StudentProfile, Evaluation, Question, EvaluationAttempt, 
     StudentResponse, PlagiarismCheck, Assignment, 
     AssignmentSubmission, AssignmentPlagiarismCheck, PlagiarismResult, SystemLog,
@@ -70,6 +71,75 @@ DEFAULT_CATEGORIES = ['progrmming in python', 'Algorithm','Technology']
 CATEGORY_PALETTE = ['#6366F1', '#EC4899', '#14B8A6', '#F97316', '#22C55E', '#EAB308', '#8B5CF6', '#0EA5E9', '#F43F5E', '#10B981']
 
 CATEGORY_PALETTE = ['#6366F1', '#EC4899', '#14B8A6', '#F97316', '#22C55E', '#EAB308', '#8B5CF6', '#0EA5E9', '#F43F5E', '#10B981']
+READING_STATUSES = {'unread', 'reading', 'finished'}
+
+def normalize_reading_status(status):
+    return status if status in READING_STATUSES else 'unread'
+
+def book_access_allowed(book, user):
+    if user.is_admin:
+        return book.user_id == user.id or book.is_global
+    if book.user_id == user.id:
+        return True
+    if not book.is_global:
+        return False
+
+    profile = StudentProfile.query.filter_by(user_id=user.id).first()
+    student_class = profile.student_class if profile else None
+    return book.target_class == 'All' or (student_class and book.target_class == student_class)
+
+def get_or_create_book_progress(user_id, book_id):
+    progress = BookProgress.query.filter_by(user_id=user_id, book_id=book_id).first()
+    if not progress:
+        progress = BookProgress(user_id=user_id, book_id=book_id)
+        db.session.add(progress)
+        db.session.flush()
+    return progress
+
+def book_progress_view(book, progress=None, fallback_to_book=False):
+    data = {column.name: getattr(book, column.name) for column in Book.__table__.columns}
+    if progress:
+        data.update({
+            'status': normalize_reading_status(progress.status),
+            'current_page': progress.current_page or 1,
+            'last_read_at': progress.last_read_at,
+            'progress': progress
+        })
+    elif fallback_to_book:
+        data.update({
+            'status': normalize_reading_status(book.status),
+            'current_page': book.current_page or 1,
+            'last_read_at': book.last_read_at,
+            'progress': None
+        })
+    else:
+        data.update({
+            'status': 'unread',
+            'current_page': 1,
+            'last_read_at': None,
+            'progress': None
+        })
+    return SimpleNamespace(**data)
+
+def books_with_user_progress(books, user_id):
+    book_ids = [book.id for book in books]
+    if not book_ids:
+        return []
+
+    progress_records = BookProgress.query.filter(
+        BookProgress.user_id == user_id,
+        BookProgress.book_id.in_(book_ids)
+    ).all()
+    progress_by_book_id = {progress.book_id: progress for progress in progress_records}
+
+    return [
+        book_progress_view(
+            book,
+            progress_by_book_id.get(book.id),
+            fallback_to_book=(book.user_id == user_id and not book.is_global)
+        )
+        for book in books
+    ]
 
 @app.before_request
 def require_profile():
@@ -97,20 +167,12 @@ def dashboard():
 
     if current_user.is_admin:
         query = Book.query.filter(or_(Book.user_id == current_user.id, Book.is_global == True))
-        recent_query = Book.query.filter(or_(Book.user_id == current_user.id, Book.is_global == True), Book.last_read_at != None)
     else:
         query = Book.query.filter(
             or_(
                 Book.user_id == current_user.id, 
                 and_(Book.is_global == True, or_(Book.target_class == 'All', Book.target_class == student_class))
             )
-        )
-        recent_query = Book.query.filter(
-            or_(
-                Book.user_id == current_user.id, 
-                and_(Book.is_global == True, or_(Book.target_class == 'All', Book.target_class == student_class))
-            ), 
-            Book.last_read_at != None
         )
 
     if sort_by == 'newest':
@@ -119,7 +181,14 @@ def dashboard():
         query = query.order_by(Book.created_at.asc())
 
     visible_books = query.all()
-    recent_books = recent_query.order_by(Book.last_read_at.desc()).limit(5).all()
+    if not current_user.is_admin:
+        visible_books = books_with_user_progress(visible_books, current_user.id)
+
+    recent_books = sorted(
+        [book for book in visible_books if book.last_read_at],
+        key=lambda book: book.last_read_at,
+        reverse=True
+    )[:5]
     
     books_by_category = {}
     for book in visible_books:
@@ -727,7 +796,7 @@ def uploaded_file(filename):
 
     # Check Book access
     book = Book.query.filter_by(file_path=filename).first()
-    if book and (book.user_id == current_user.id or book.is_global):
+    if book and book_access_allowed(book, current_user):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     
     # Check Assignment Instructions access
@@ -751,7 +820,7 @@ def uploaded_file(filename):
 @login_required
 def book_file(book_id):
     book = Book.query.get_or_404(book_id)
-    if book.user_id != current_user.id and not book.is_global:
+    if not book_access_allowed(book, current_user):
         return redirect(url_for('dashboard'))
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], book.file_path)
     if not os.path.exists(file_path):
@@ -762,42 +831,64 @@ def book_file(book_id):
 @login_required
 def read_book(book_id):
     book = Book.query.get_or_404(book_id)
-    if book.user_id != current_user.id and not book.is_global:
+    if not book_access_allowed(book, current_user):
         return redirect(url_for('dashboard'))
-    
-    was_unread = book.status == 'unread'
+
+    if current_user.is_admin or (book.user_id == current_user.id and not book.is_global):
+        progress_target = book
+        progress_view = book
+    else:
+        progress_target = get_or_create_book_progress(current_user.id, book.id)
+        progress_view = book_progress_view(book, progress_target)
+
+    was_unread = normalize_reading_status(progress_target.status) == 'unread'
     if was_unread:
-        book.status = 'reading'
-    book.last_read_at = datetime.utcnow()
+        progress_target.status = 'reading'
+    progress_target.last_read_at = datetime.utcnow()
     db.session.commit()
 
     if was_unread:
         log_action('Started Reading', f'Started reading: "{book.title}" by {book.author}')
-    
-    return render_template('read_book.html', book=book)
+
+    if progress_view is not book:
+        progress_view = book_progress_view(book, progress_target)
+
+    return render_template('read_book.html', book=progress_view)
 
 @app.route('/update_progress/<int:book_id>', methods=['POST'])
 @login_required
 def update_progress(book_id):
     book = Book.query.get_or_404(book_id)
-    if book.user_id != current_user.id and not book.is_global:
+    if not book_access_allowed(book, current_user):
         return jsonify({'error': 'Unauthorized'}), 403
-        
-    data = request.json
-    prev_status = book.status
+
+    data = request.get_json(silent=True) or {}
+    if 'status' in data and data['status'] not in READING_STATUSES:
+        return jsonify({'error': 'Invalid reading status'}), 400
+
+    if current_user.is_admin or (book.user_id == current_user.id and not book.is_global):
+        progress_target = book
+    else:
+        progress_target = get_or_create_book_progress(current_user.id, book.id)
+
+    prev_status = normalize_reading_status(progress_target.status)
     if 'current_page' in data:
-        book.current_page = data['current_page']
+        progress_target.current_page = data['current_page']
     if 'status' in data:
-        book.status = data['status']
-        if book.status in ['reading', 'finished']:
-            book.last_read_at = datetime.utcnow()
+        progress_target.status = data['status']
+        if progress_target.status in ['reading', 'finished']:
+            progress_target.last_read_at = datetime.utcnow()
         
     db.session.commit()
 
     if data.get('status') == 'finished' and prev_status != 'finished':
         log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')
 
-    return jsonify({'success': True, 'current_page': book.current_page, 'status': book.status})
+    return jsonify({
+        'success': True,
+        'current_page': progress_target.current_page,
+        'status': progress_target.status
+    })
 
 @app.route('/admin/reading_progress')
 @login_required
@@ -805,16 +896,25 @@ def admin_reading_progress():
     if not current_user.is_admin:
         return redirect(url_for('dashboard'))
     
-    students = User.query.filter_by(is_admin=False).all()
+    students = User.query.filter_by(is_admin=False).order_by(User.username.asc()).all()
     progress_data = []
     for student in students:
         profile = StudentProfile.query.filter_by(user_id=student.id).first()
-        # books owned by this student OR global books they've touched
-        student_books = Book.query.filter_by(user_id=student.id).all()
+        student_class = profile.student_class if profile else None
+        assigned_books = Book.query.filter(
+            or_(
+                Book.user_id == student.id,
+                and_(
+                    Book.is_global == True,
+                    or_(Book.target_class == 'All', Book.target_class == student_class)
+                )
+            )
+        ).order_by(Book.created_at.desc()).all()
+        student_books = books_with_user_progress(assigned_books, student.id)
         total = len(student_books)
         finished = sum(1 for b in student_books if b.status == 'finished')
         reading = sum(1 for b in student_books if b.status == 'reading')
-        unread = sum(1 for b in student_books if b.status == 'unread')
+        unread = total - finished - reading
         progress_data.append({
             'student': student,
             'profile': profile,
@@ -1660,6 +1760,7 @@ def remove_student(student_id):
         name = student.full_name
         try:
             # Delete associated records to prevent foreign key constraint errors
+            BookProgress.query.filter_by(user_id=user.id).delete()
             Book.query.filter_by(user_id=user.id).delete()
             Category.query.filter_by(user_id=user.id).delete()
             AssignmentSubmission.query.filter_by(user_id=user.id).delete()
@@ -1696,6 +1797,7 @@ def delete_all_students():
         count = 0
         for user in users:
             # Delete associated records
+            BookProgress.query.filter_by(user_id=user.id).delete()
             Book.query.filter_by(user_id=user.id).delete()
             Category.query.filter_by(user_id=user.id).delete()
             AssignmentSubmission.query.filter_by(user_id=user.id).delete()
