@@ -220,11 +220,11 @@
             document.cookie = `googtrans=${val}; domain=${location.hostname}; path=/`;
         }
 
-        // On page load, ensure cookie matches user's preferred language (defaulting to /en/en if unset)
-        const savedLang = localStorage.getItem(langKey) || '/en/en';
+        // On page load, ensure cookie matches user's preferred language
+        const savedLang = localStorage.getItem(langKey);
         const currentCookie = getGoogTransCookie();
 
-        if (savedLang !== currentCookie) {
+        if (savedLang && savedLang !== currentCookie) {
             setGoogTransCookie(savedLang);
             if (currentCookie !== null) { // Reload only if cookie was previously set to something else
                 window.location.reload();

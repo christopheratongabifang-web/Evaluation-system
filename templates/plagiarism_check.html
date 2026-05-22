@@ -9,17 +9,17 @@
             <h5 class="mb-0">Check for Plagiarism</h5>
         </div>
         <div class="card-body p-4">
-            <p class="text-muted mb-3">Compare student responses within an evaluation to detect similarities and potential plagiarism.</p>
+            <p class="text-muted mb-3">Compare student submissions for an assignment to detect similarities and potential plagiarism.</p>
             <form method="POST">
                 <div class="form-group mb-4">
-                    <label for="evaluation_id" class="form-label fw-bold">Select Evaluation</label>
-                    <select class="form-select form-select-lg" id="evaluation_id" name="evaluation_id" required>
-                        <option value="">-- Choose an Evaluation --</option>
-                        {% for eval in evaluations %}
-                        <option value="{{ eval.id }}">{{ eval.title }}</option>
+                    <label for="assignment_id" class="form-label fw-bold">Select Assignment</label>
+                    <select class="form-select form-select-lg" id="assignment_id" name="assignment_id" required>
+                        <option value="">-- Choose an Assignment --</option>
+                        {% for assignment in assignments %}
+                        <option value="{{ assignment.id }}">{{ assignment.title }}</option>
                         {% endfor %}
                     </select>
-                    <small class="text-muted">This will compare student answers to detect similarities</small>
+                    <small class="text-muted">This will compare student submissions to detect similarities</small>
                 </div>
                 <button type="submit" class="btn btn-danger btn-lg">
                     <i class="fas fa-search"></i> Run Plagiarism Check

@@ -49,7 +49,7 @@ PASSWORD_RULES = {
 }
 
 def is_valid_password(password):
-    if not password:
+    if not password or len(password) < 8:
         return False
     return bool(PASSWORD_RULES['uppercase'].search(password) and PASSWORD_RULES['special'].search(password))
 
@@ -198,7 +198,21 @@ def send_notification():
         notification = Notification(message=message, user_id=None)
         db.session.add(notification)
         db.session.commit()
+        log_action('Broadcast Sent', f'Message: {message}')
         flash('Notification sent to all students!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_notification/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    if not current_user.is_admin:
+        return redirect(url_for('dashboard'))
+    
+    notification = Notification.query.get_or_404(notification_id)
+    db.session.delete(notification)
+    db.session.commit()
+    log_action('Broadcast Deleted', 'A broadcast message was deleted')
+    flash('Broadcast message deleted successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/messages')
@@ -237,6 +251,7 @@ def send_message(recipient_id):
         msg = Message(sender_id=current_user.id, recipient_id=recipient_id, content=content)
         db.session.add(msg)
         db.session.commit()
+        log_action('Message Sent', 'A direct message was sent')
         flash('Message sent!', 'success')
     
     if current_user.is_admin:
@@ -251,6 +266,7 @@ def delete_message(msg_id):
     if current_user.is_admin or msg.sender_id == current_user.id or msg.recipient_id == current_user.id:
         db.session.delete(msg)
         db.session.commit()
+        log_action('Message Deleted', 'A direct message was deleted')
         flash('Message deleted.', 'success')
     return redirect(url_for('messages'))
 
@@ -264,7 +280,20 @@ def clear_conversation(student_id):
         (Message.sender_id == student_id) & (Message.recipient_id == current_user.id)
     )).delete()
     db.session.commit()
+    log_action('Conversation Cleared', f'Cleared conversation with student ID {student_id}')
     flash('Conversation cleared.', 'success')
+    return redirect(url_for('messages'))
+
+@app.route('/clear_all_messages', methods=['POST'])
+@login_required
+def clear_all_messages():
+    if not current_user.is_admin:
+        return redirect(url_for('dashboard'))
+    Message.query.delete()
+    Notification.query.delete()
+    db.session.commit()
+    log_action('All Messages Cleared', 'Admin cleared all messages and broadcasts')
+    flash('All messages and broadcasts have been successfully cleared.', 'success')
     return redirect(url_for('messages'))
 
 @app.route('/add_category', methods=['GET', 'POST'])
@@ -284,6 +313,7 @@ def add_category():
                 cat = Category(name=name, user_id=current_user.id)
                 db.session.add(cat)
                 db.session.commit()
+                log_action('Category Added', 'Added new book category')
                 flash('Category added successfully!', 'success')
                 return redirect(url_for('dashboard'))
     return render_template('add_category.html')
@@ -305,8 +335,14 @@ def register():
             flash('Email already exists', 'danger')
             return redirect(url_for('register'))
 
+        import re
+        EMAIL_REGEX = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+        if not EMAIL_REGEX.match(email):
+            flash('Please provide a valid email address.', 'danger')
+            return redirect(url_for('register'))
+
         if not is_valid_password(password):
-            flash('Password must include at least one uppercase letter and one special character.', 'danger')
+            flash('Password must be at least 8 characters long, include at least one uppercase letter and one special character.', 'danger')
             return redirect(url_for('register'))
             
         is_first_admin = User.query.filter_by(is_admin=True).first() is None
@@ -314,6 +350,7 @@ def register():
         user = User(username=username, email=email, password_hash=hashed_password, is_admin=is_first_admin)
         db.session.add(user)
         db.session.commit()
+        log_action('User Registration', f'New user registered: {username}')
         
         for cat_name in DEFAULT_CATEGORIES:
             cat = Category(name=cat_name, user_id=user.id)
@@ -345,9 +382,17 @@ def login():
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
+        email = username.lower()
         password = request.form.get('password', '')
         remember = True if request.form.get('remember') else False
-        user = User.query.filter((User.username == username) | (User.email == username.lower())).first()
+        
+        import re
+        EMAIL_REGEX = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+        if not EMAIL_REGEX.match(email):
+            flash('Please provide a valid email address.', 'danger')
+            return redirect(url_for('login'))
+
+        user = User.query.filter_by(email=email).first()
 
         locked_until = lockout_until.get(username)
         if locked_until:
@@ -795,6 +840,7 @@ def student_profile():
             db.session.add(profile)
         
         db.session.commit()
+        log_action('Profile Updated', 'Student updated their profile')
         flash('Profile updated successfully!', 'success')
         return redirect(next_url or url_for('dashboard'))
     
@@ -1324,6 +1370,7 @@ def generate_evaluation_report_pdf(eval_id):
         download_name=f"evaluation_report_{evaluation.id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
     )
 
+
 # Admin: Plagiarism Check
 @app.route('/admin/plagiarism/check', methods=['GET', 'POST'])
 @login_required
@@ -1331,44 +1378,28 @@ def plagiarism_check():
     if not current_user.is_admin:
         return redirect(url_for('dashboard'))
     
-    checks = PlagiarismCheck.query.order_by(PlagiarismCheck.checked_at.desc()).limit(20).all()
-    
-    evaluations = Evaluation.query.filter_by(created_by=current_user.id).all()
+    checks = AssignmentPlagiarismCheck.query.order_by(AssignmentPlagiarismCheck.checked_at.desc()).limit(20).all()
+    assignments = Assignment.query.filter_by(created_by=current_user.id).all()
     
     if request.method == 'POST':
-        eval_id = request.form.get('evaluation_id')
-        
-        if eval_id:
-            # Compare student responses for plagiarism within an evaluation
-            attempts = EvaluationAttempt.query.filter_by(evaluation_id=eval_id, is_submitted=True).all()
-            
-            if not attempts:
-                flash('No student submissions found for this evaluation. Plagiarism check cannot be performed.', 'warning')
-                return render_template('plagiarism_check.html', checks=checks, comparisons=[], evaluations=evaluations)
-            
+        assignment_id = request.form.get('assignment_id')
+        if assignment_id:
+            check = AssignmentPlagiarismCheck.query.filter_by(assignment_id=assignment_id).order_by(AssignmentPlagiarismCheck.checked_at.desc()).first()
             comparisons = []
-            for i, attempt1 in enumerate(attempts):
-                for attempt2 in attempts[i+1:]:
-                    # Compare responses
-                    responses1 = StudentResponse.query.filter_by(attempt_id=attempt1.id).all()
-                    responses2 = StudentResponse.query.filter_by(attempt_id=attempt2.id).all()
-                    
-                    if responses1 and responses2:
-                        text1 = ' '.join([r.selected_answer or '' for r in responses1])
-                        text2 = ' '.join([r.selected_answer or '' for r in responses2])
-                        similarity = calculate_similarity(text1, text2)
-                        
-                        if similarity > 70:  # Flag if similarity > 70%
-                            comparisons.append({
-                                'student1': attempt1.student_profile.full_name,
-                                'student2': attempt2.student_profile.full_name,
-                                'similarity': similarity
-                            })
-            
-            flash(f'Plagiarism check completed. Found {len([c for c in comparisons if c["similarity"] > 80])} high similarity matches.', 'info')
-            return render_template('plagiarism_check.html', checks=checks, comparisons=comparisons, evaluations=evaluations)
+            if check and check.status == 'completed':
+                results = PlagiarismResult.query.filter_by(check_id=check.id).all()
+                for r in results:
+                    comparisons.append({
+                        'student1': r.submission1.student_profile.full_name,
+                        'student2': r.submission2.student_profile.full_name,
+                        'similarity': r.similarity_percentage
+                    })
+                flash(f'Found {len(comparisons)} comparison results for this assignment.', 'success')
+            else:
+                flash('No plagiarism checks have been completed for this assignment yet. Please run the check from the assignment submissions page.', 'warning')
+            return render_template('plagiarism_check.html', checks=checks, comparisons=comparisons, assignments=assignments)
     
-    return render_template('plagiarism_check.html', checks=checks, comparisons=[], evaluations=evaluations)
+    return render_template('plagiarism_check.html', checks=checks, comparisons=[], assignments=assignments)
 
 # Admin: Manage Students
 @app.route('/admin/students', methods=['GET'])
@@ -2277,6 +2308,7 @@ def delete_assignment(assignment_id):
     
     db.session.delete(assignment)
     db.session.commit()
+    log_action('Assignment Deleted', 'An assignment was deleted')
     flash('Assignment deleted successfully!', 'success')
     return redirect(url_for('admin_assignments'))
 
@@ -2381,6 +2413,7 @@ def grade_submission(submission_id):
     submission.is_graded = True
     
     db.session.commit()
+    log_action('Submission Graded', f'Graded submission with score: {grade}%')
     flash('Submission graded successfully!', 'success')
     return redirect(url_for('admin_assignment_submissions', assignment_id=submission.assignment_id))
 
@@ -2636,4 +2669,4 @@ def system_logs():
 
 if __name__ == '__main__':
     ensure_db_schema()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=False)
