@@ -144,6 +144,15 @@ def dashboard():
         active_evaluations_count = Evaluation.query.filter(Evaluation.is_active == True, Evaluation.target_class == 'All').count()
         active_assignments_count = Assignment.query.filter(Assignment.is_active == True, Assignment.target_class == 'All').count()
 
+    # Reading progress stats
+    reading_stats = {
+        'unread': sum(1 for b in visible_books if b.status == 'unread'),
+        'reading': sum(1 for b in visible_books if b.status == 'reading'),
+        'finished': sum(1 for b in visible_books if b.status == 'finished'),
+    }
+    in_progress_books = [b for b in visible_books if b.status == 'reading']
+    finished_books = [b for b in visible_books if b.status == 'finished']
+
     return render_template(
         'dashboard.html',
         books_by_category=books_by_category,
@@ -156,7 +165,10 @@ def dashboard():
         no_admin_exists=no_admin_exists,
         unread_messages=unread_messages,
         active_evaluations_count=active_evaluations_count,
-        active_assignments_count=active_assignments_count
+        active_assignments_count=active_assignments_count,
+        reading_stats=reading_stats,
+        in_progress_books=in_progress_books,
+        finished_books=finished_books
     )
 
 @app.route('/mark_notifications_read', methods=['POST'])
@@ -326,6 +338,7 @@ def register():
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
+        gender = request.form.get('gender', '').strip()
         
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'danger')
@@ -347,7 +360,7 @@ def register():
             
         is_first_admin = User.query.filter_by(is_admin=True).first() is None
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(username=username, email=email, password_hash=hashed_password, is_admin=is_first_admin)
+        user = User(username=username, email=email, password_hash=hashed_password, is_admin=is_first_admin, gender=gender if gender else None)
         db.session.add(user)
         db.session.commit()
         log_action('User Registration', f'New user registered: {username}')
@@ -752,10 +765,14 @@ def read_book(book_id):
     if book.user_id != current_user.id and not book.is_global:
         return redirect(url_for('dashboard'))
     
-    if book.status == 'unread':
+    was_unread = book.status == 'unread'
+    if was_unread:
         book.status = 'reading'
     book.last_read_at = datetime.utcnow()
     db.session.commit()
+
+    if was_unread:
+        log_action('Started Reading', f'Started reading: "{book.title}" by {book.author}')
     
     return render_template('read_book.html', book=book)
 
@@ -767,6 +784,7 @@ def update_progress(book_id):
         return jsonify({'error': 'Unauthorized'}), 403
         
     data = request.json
+    prev_status = book.status
     if 'current_page' in data:
         book.current_page = data['current_page']
     if 'status' in data:
@@ -775,7 +793,39 @@ def update_progress(book_id):
             book.last_read_at = datetime.utcnow()
         
     db.session.commit()
+
+    if data.get('status') == 'finished' and prev_status != 'finished':
+        log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')
+
     return jsonify({'success': True, 'current_page': book.current_page, 'status': book.status})
+
+@app.route('/admin/reading_progress')
+@login_required
+def admin_reading_progress():
+    if not current_user.is_admin:
+        return redirect(url_for('dashboard'))
+    
+    students = User.query.filter_by(is_admin=False).all()
+    progress_data = []
+    for student in students:
+        profile = StudentProfile.query.filter_by(user_id=student.id).first()
+        # books owned by this student OR global books they've touched
+        student_books = Book.query.filter_by(user_id=student.id).all()
+        total = len(student_books)
+        finished = sum(1 for b in student_books if b.status == 'finished')
+        reading = sum(1 for b in student_books if b.status == 'reading')
+        unread = sum(1 for b in student_books if b.status == 'unread')
+        progress_data.append({
+            'student': student,
+            'profile': profile,
+            'total': total,
+            'finished': finished,
+            'reading': reading,
+            'unread': unread,
+            'books': student_books
+        })
+    
+    return render_template('admin_reading_progress.html', progress_data=progress_data)
 
 @app.route('/about')
 def about():
@@ -2669,4 +2719,4 @@ def system_logs():
 
 if __name__ == '__main__':
     ensure_db_schema()
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    app.run(host='127.0.0.1', port=5000, debug=True)

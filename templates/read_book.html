@@ -1,43 +1,133 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="glass" style="padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary);">
+
+<!-- Toast notification -->
+<div id="completion-toast" style="display:none; position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+     background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 1.25rem 1.75rem;
+     border-radius: 1rem; box-shadow: 0 20px 40px rgba(16,185,129,0.4); animation: slideUp 0.4s ease;
+     display: flex; align-items: center; gap: 1rem; max-width: 380px;">
+    <i class="fa-solid fa-circle-check" style="font-size: 1.75rem;"></i>
     <div>
-        <h1 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">{{ book.title }}</h1>
-        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">Reading: {{ book.author }}</p>
-    </div>
-    <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <button id="mark-finished" class="btn btn-success" style="padding: 0.6rem 1.2rem;">
-            <i class="fa-solid fa-check"></i> Mark Finished
-        </button>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.6rem 1.2rem;">
-            <i class="fa-solid fa-house"></i> Dashboard
-        </a>
+        <div style="font-weight: 700; font-size: 1rem;">Reading Complete! 🎉</div>
+        <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem;">This book has been marked as finished.</div>
     </div>
 </div>
 
-<div class="reader-container" style="min-height: 85vh; margin-bottom: 2rem;">
-    <iframe id="pdf-iframe" src="{{ url_for('book_file', book_id=book.id) }}" style="width:100%; height:85vh; border:none; background: #334155;"></iframe>
+<!-- Header Bar -->
+<div class="glass" style="padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary); border-radius: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <!-- Status Indicator -->
+            <div id="status-badge" style="
+                padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+                {% if book.status == 'finished' %}
+                    background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);
+                {% elif book.status == 'reading' %}
+                    background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);
+                {% else %}
+                    background: rgba(99,102,241,0.15); color: #6366f1; border: 1px solid rgba(99,102,241,0.3);
+                {% endif %}
+            ">
+                <i class="fa-solid {% if book.status == 'finished' %}fa-circle-check{% elif book.status == 'reading' %}fa-book-open{% else %}fa-book{% endif %}"></i>
+                {% if book.status == 'finished' %}Completed{% elif book.status == 'reading' %}Reading{% else %}Unread{% endif %}
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">{{ book.title }}</h1>
+                <p style="margin: 0.15rem 0 0 0; color: var(--text-secondary); font-size: 0.85rem;">
+                    <i class="fa-solid fa-user-pen me-1"></i>{{ book.author }}
+                    {% if book.last_read_at %}
+                     &nbsp;·&nbsp; <i class="fa-solid fa-clock me-1"></i>Last read {{ book.last_read_at.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            {% if book.status != 'finished' %}
+            <button id="mark-finished" class="btn btn-success" style="padding: 0.6rem 1.4rem; font-weight: 700; border-radius: 0.75rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+                <i class="fa-solid fa-circle-check me-2"></i>Mark as Complete
+            </button>
+            {% else %}
+            <div style="padding: 0.6rem 1.4rem; border-radius: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; font-weight: 700; border: 1px solid rgba(16,185,129,0.3);">
+                <i class="fa-solid fa-circle-check me-2"></i>Completed ✓
+            </div>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 0.6rem 1.2rem; border-radius: 0.75rem;">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
+    </div>
 </div>
+
+<!-- Reading Progress Bar (visible when in progress) -->
+{% if book.status == 'reading' %}
+<div class="glass" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; align-items: center; gap: 1.5rem;">
+    <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Reading in Progress</span>
+            <span style="font-size:0.8rem; color:var(--warning); font-weight:700;">Keep going!</span>
+        </div>
+        <div style="height:6px; background:var(--surface-border); border-radius:3px; overflow:hidden;">
+            <div style="height:100%; width:50%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius:3px; animation: pulse 2s infinite;"></div>
+        </div>
+    </div>
+    <i class="fa-solid fa-book-open-reader" style="font-size:1.5rem; color:var(--warning);"></i>
+</div>
+{% endif %}
+
+<!-- PDF Viewer -->
+<div class="reader-container" style="margin-bottom: 2rem; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+    <iframe id="pdf-iframe" src="{{ url_for('book_file', book_id=book.id) }}"
+            style="width:100%; height:88vh; border:none; background: #1e293b; display:block;">
+    </iframe>
+</div>
+
+<style>
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.6; }
+}
+</style>
 
 <script>
+    const bookId   = {{ book.id }};
+    const currentStatus = "{{ book.status }}";
+
     function saveProgress(page, status) {
-        fetch("{{ url_for('update_progress', book_id=book.id) }}", {
+        return fetch("{{ url_for('update_progress', book_id=book.id) }}", {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                current_page: page,
-                status: status
-            })
-        });
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ current_page: page, status: status })
+        }).then(r => r.json());
     }
 
-    document.getElementById('mark-finished').addEventListener('click', function() {
-        saveProgress(1, 'finished');
-        alert('Book marked as finished!');
-        window.location.href = "{{ url_for('dashboard') }}";
+    {% if book.status != 'finished' %}
+    document.getElementById('mark-finished').addEventListener('click', function () {
+        this.disabled = true;
+        this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving...';
+        saveProgress(1, 'finished').then(() => {
+            // Show toast
+            const toast = document.getElementById('completion-toast');
+            toast.style.display = 'flex';
+            // Update badge
+            const badge = document.getElementById('status-badge');
+            badge.style.background = 'rgba(16,185,129,0.15)';
+            badge.style.color = '#10b981';
+            badge.style.border = '1px solid rgba(16,185,129,0.3)';
+            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Completed';
+            // Swap button to completed state
+            this.outerHTML = '<div style="padding: 0.6rem 1.4rem; border-radius: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; font-weight: 700; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-circle-check me-2"></i>Completed ✓</div>';
+            // Remove progress bar if visible
+            const progressBar = document.querySelector('.reader-container')?.previousElementSibling;
+            // Hide toast after 4s
+            setTimeout(() => { toast.style.display = 'none'; }, 4500);
+        });
     });
+    {% endif %}
 </script>
 {% endblock %}

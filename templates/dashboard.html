@@ -81,6 +81,13 @@
             <p>{{ unread_count }} New</p>
         </div>
     </div>
+    <div class="hub-btn" onclick="showSection('reading-section', this)">
+        <i class="fa-solid fa-chart-line"></i>
+        <div>
+            <h3>Reading Tracker</h3>
+            <p>{{ reading_stats.finished }} Completed</p>
+        </div>
+    </div>
 </div>
 
 <!-- Books Section -->
@@ -217,6 +224,86 @@
             <i class="fa-solid fa-envelope"></i> Open Messages Inbox
         </a>
     </div>
+</div>
+
+<!-- Reading Tracker Section -->
+<div id="reading-section" class="dashboard-section">
+    <!-- Stats Row -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
+        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #6366f1;">
+            <i class="fa-solid fa-book" style="font-size: 2rem; color: #6366f1; margin-bottom: 0.75rem;"></i>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.unread }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Not Started</div>
+        </div>
+        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #f59e0b;">
+            <i class="fa-solid fa-book-open" style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.75rem;"></i>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.reading }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">In Progress</div>
+        </div>
+        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #10b981;">
+            <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: #10b981; margin-bottom: 0.75rem;"></i>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.finished }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Completed</div>
+        </div>
+    </div>
+
+    <!-- In Progress -->
+    {% if in_progress_books %}
+    <div class="glass" style="padding: 1.5rem; border-radius: 1rem; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+        <h3 style="margin: 0 0 1.25rem 0; font-size: 1.1rem; color: #f59e0b;">
+            <i class="fa-solid fa-book-open me-2"></i>Currently Reading
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for book in in_progress_books %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: rgba(245,158,11,0.07); border-radius: 0.75rem; border: 1px solid rgba(245,158,11,0.2);">
+                <div>
+                    <div style="font-weight: 700; color: var(--text-primary);">{{ book.title }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        by {{ book.author }}
+                        {% if book.last_read_at %} · Last opened {{ book.last_read_at.strftime('%b %d, %Y') }}{% endif %}
+                    </div>
+                </div>
+                <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-sm" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 0.5rem; padding: 0.4rem 0.9rem; font-weight: 600; white-space: nowrap;">
+                    <i class="fa-solid fa-book-open me-1"></i> Continue
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Completed -->
+    {% if finished_books %}
+    <div class="glass" style="padding: 1.5rem; border-radius: 1rem; border-left: 4px solid #10b981;">
+        <h3 style="margin: 0 0 1.25rem 0; font-size: 1.1rem; color: #10b981;">
+            <i class="fa-solid fa-circle-check me-2"></i>Completed Books
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for book in finished_books %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: rgba(16,185,129,0.07); border-radius: 0.75rem; border: 1px solid rgba(16,185,129,0.2);">
+                <div>
+                    <div style="font-weight: 700; color: var(--text-primary);">{{ book.title }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">by {{ book.author }}</div>
+                </div>
+                <span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 0.5rem; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700;">
+                    <i class="fa-solid fa-check me-1"></i> Done
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not in_progress_books and not finished_books %}
+    <div class="glass" style="padding: 4rem 2rem; text-align: center; border-radius: 1rem;">
+        <i class="fa-solid fa-chart-line" style="font-size: 3rem; color: var(--surface-border); margin-bottom: 1rem;"></i>
+        <h3>No reading activity yet</h3>
+        <p style="color: var(--text-secondary);">Open a book to start tracking your reading progress.</p>
+        <a href="#" onclick="showSection('books-section', document.querySelector('.hub-btn'))" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fa-solid fa-book me-2"></i>Browse My Library
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <!-- AI Chat Sidebar -->

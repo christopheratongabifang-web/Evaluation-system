@@ -13,6 +13,16 @@
             <input type="email" id="email" name="email" class="form-control" required placeholder="you@example.com" oninput="this.value = this.value.toLowerCase()">
         </div>
         <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" class="form-control" required>
+                <option value="" disabled selected>Select your gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label for="password">Password</label>
             <div class="password-wrapper">
                 <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••">

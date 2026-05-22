@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-actions" style="margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">
+            Reading <span style="color: var(--primary);">Progress</span>
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 0.5rem;">
+            Track every student's reading activity across all books and notes.
+        </p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="padding: 0.75rem 1.5rem; border-radius: 1rem;">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+{% if progress_data %}
+<div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    {% for entry in progress_data %}
+    {% set student = entry.student %}
+    {% set profile = entry.profile %}
+    <div class="glass" style="border-radius: 1.25rem; overflow: hidden; border: 1px solid var(--surface-border);">
+
+        <!-- Student Header -->
+        <div style="padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 3rem; height: 3rem; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: white; flex-shrink: 0;">
+                    {{ student.username[0]|upper }}
+                </div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">
+                        {{ profile.full_name if profile else student.username }}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        {{ student.email }}
+                        {% if profile %} · {{ profile.student_class or 'No Class' }}{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Stats -->
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div style="text-align: center; padding: 0.5rem 1rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); border-radius: 0.75rem; min-width: 70px;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #6366f1;">{{ entry.unread }}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Unread</div>
+                </div>
+                <div style="text-align: center; padding: 0.5rem 1rem; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 0.75rem; min-width: 70px;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #f59e0b;">{{ entry.reading }}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Reading</div>
+                </div>
+                <div style="text-align: center; padding: 0.5rem 1rem; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); border-radius: 0.75rem; min-width: 70px;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #10b981;">{{ entry.finished }}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Done</div>
+                </div>
+                {% if entry.total > 0 %}
+                <div style="text-align: center; padding: 0.5rem 1rem; background: rgba(79,70,229,0.1); border: 1px solid rgba(79,70,229,0.25); border-radius: 0.75rem; min-width: 70px;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">{{ ((entry.finished / entry.total) * 100)|round|int }}%</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Complete</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        {% if entry.total > 0 %}
+        <div style="padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.01); border-bottom: 1px solid var(--surface-border);">
+            <div style="height: 8px; background: var(--surface-border); border-radius: 4px; overflow: hidden; display: flex;">
+                <div style="height: 100%; width: {{ ((entry.finished / entry.total) * 100)|round|int }}%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 4px 0 0 4px; transition: width 0.5s ease;"></div>
+                <div style="height: 100%; width: {{ ((entry.reading / entry.total) * 100)|round|int }}%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem;">
+                <span style="color: #10b981;">■</span> Completed &nbsp;
+                <span style="color: #f59e0b;">■</span> In Progress &nbsp;
+                <span style="color: var(--surface-border);">■</span> Not Started
+                &nbsp;·&nbsp; {{ entry.total }} total book(s)
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Book List (collapsible) -->
+        {% if entry.books %}
+        <div style="padding: 1rem 1.5rem;">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                {% for book in entry.books %}
+                <div style="
+                    padding: 0.4rem 0.85rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 600;
+                    {% if book.status == 'finished' %}
+                        background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3);
+                    {% elif book.status == 'reading' %}
+                        background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);
+                    {% else %}
+                        background: rgba(99,102,241,0.1); color: #818cf8; border: 1px solid rgba(99,102,241,0.2);
+                    {% endif %}
+                " title="{{ book.title }}">
+                    <i class="fa-solid {% if book.status == 'finished' %}fa-circle-check{% elif book.status == 'reading' %}fa-book-open{% else %}fa-book{% endif %} me-1"></i>
+                    {{ book.title|truncate(30, True, '…') }}
+                    {% if book.last_read_at and book.status != 'unread' %}
+                    <span style="opacity:0.7; font-weight:400;"> · {{ book.last_read_at.strftime('%b %d') }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div style="padding: 1.25rem 1.5rem; color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">
+            No books assigned to this student.
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass" style="padding: 4rem 2rem; text-align: center; border-radius: 1.5rem;">
+    <i class="fa-solid fa-users" style="font-size: 3rem; color: var(--surface-border); margin-bottom: 1rem;"></i>
+    <h3>No students registered yet</h3>
+    <p style="color: var(--text-secondary);">Student reading progress will appear here once students register and start reading.</p>
+</div>
+{% endif %}
+{% endblock %}

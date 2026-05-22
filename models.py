@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     is_muted = db.Column(db.Boolean, default=False, nullable=False)
+    gender = db.Column(db.String(20), nullable=True)  # Male, Female, Other, Prefer not to say
     books = db.relationship('Book', backref='owner', lazy=True)
     categories = db.relationship('Category', backref='owner', lazy=True)
     notifications = db.relationship('Notification', backref='recipient', lazy=True)
