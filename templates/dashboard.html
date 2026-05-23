@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="header-actions" style="margin-bottom: 3rem;">
-    <div>
-        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Welcome back, <span style="color: var(--primary);">{{ current_user.username }}</span></h1>
-        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 0.5rem;">Ready to continue your learning journey?</p>
+<div class="header-actions hero-mesh animate-enter stagger-1" style="margin-bottom: 3rem;">
+    <div style="position: relative; z-index: 2;">
+        <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -0.02em;">Welcome back, <span style="color: var(--primary);">{{ current_user.username }}</span></h1>
+        <p style="color: var(--text-secondary); font-size: 1.2rem; margin-top: 0.5rem;">Ready to conquer your learning journey today?</p>
     </div>
     {% if no_admin_exists and not current_user.is_admin %}
     <div class="glass" style="margin-top: 1rem; padding: 1.5rem; border-left: 4px solid var(--warning);">
@@ -46,42 +46,42 @@
 
 <!-- Dashboard Hub -->
 <div class="dashboard-hub">
-    <div class="hub-btn active" onclick="showSection('books-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-2 active" onclick="showSection('books-section', this)">
         <i class="fa-solid fa-book"></i>
         <div>
             <h3>My Library</h3>
             <p>{{ total_books }} Books</p>
         </div>
     </div>
-    <div class="hub-btn" onclick="showSection('evaluations-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-3" onclick="showSection('evaluations-section', this)">
         <i class="fa-solid fa-file-invoice"></i>
         <div>
             <h3>Evaluations</h3>
             <p>{% if active_evaluations_count > 0 %}<span style="color: var(--warning); font-weight: bold;">{{ active_evaluations_count }} Active</span>{% else %}Take tests{% endif %}</p>
         </div>
     </div>
-    <div class="hub-btn" onclick="showSection('assignments-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-4" onclick="showSection('assignments-section', this)">
         <i class="fa-solid fa-tasks"></i>
         <div>
             <h3>Assignments</h3>
             <p>{% if active_assignments_count > 0 %}<span style="color: var(--warning); font-weight: bold;">{{ active_assignments_count }} Active</span>{% else %}View tasks{% endif %}</p>
         </div>
     </div>
-    <div class="hub-btn" onclick="showSection('messages-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-5" onclick="showSection('messages-section', this)">
         <i class="fa-solid fa-envelope"></i>
         <div>
             <h3>Messages</h3>
             <p>{{ unread_messages }} Unread</p>
         </div>
     </div>
-    <div class="hub-btn" onclick="showSection('notifications-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-6" onclick="showSection('notifications-section', this)">
         <i class="fa-solid fa-bell"></i>
         <div>
             <h3>Updates</h3>
             <p>{{ unread_count }} New</p>
         </div>
     </div>
-    <div class="hub-btn" onclick="showSection('reading-section', this)">
+    <div class="hub-btn glass-interactive animate-enter stagger-7" onclick="showSection('reading-section', this)">
         <i class="fa-solid fa-chart-line"></i>
         <div>
             <h3>Reading Tracker</h3>
@@ -129,7 +129,7 @@
             <div class="book-grid">
                 {% for book in books %}
                 {% set tag_color = category_colors.get(book.category, '#4F46E5') %}
-                <div class="book-card glass">
+                <div class="book-card glass glass-interactive animate-enter">
                     <span class="book-category" style="background: {{ tag_color }}22; color: {{ tag_color }}; border: 1px solid {{ tag_color }}33;">{{ book.category }}</span>
                     {% if book.is_global and book.user_id != current_user.id %}
                         <span class="book-category" style="background: #f59e0b; color: #92400e; border: 1px solid rgba(245, 158, 11, 0.3); margin-left: 0.5rem;">Admin Book</span>
@@ -230,19 +230,34 @@
 <div id="reading-section" class="dashboard-section">
     <!-- Stats Row -->
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
-        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #6366f1;">
-            <i class="fa-solid fa-book" style="font-size: 2rem; color: #6366f1; margin-bottom: 0.75rem;"></i>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.unread }}</div>
+        <div class="glass glass-interactive" style="padding: 1.5rem; border-radius: 1rem; text-align: center;">
+            <div class="progress-ring">
+                <svg>
+                    <circle class="ring-bg" cx="45" cy="45" r="36"></circle>
+                    <circle class="ring-progress ring-primary" cx="45" cy="45" r="36" style="stroke-dashoffset: 226;" data-percentage="{{ 100 if total_books == 0 else (reading_stats.unread / total_books * 100)|round }}"></circle>
+                </svg>
+                <span class="ring-text">{{ reading_stats.unread }}</span>
+            </div>
             <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Not Started</div>
         </div>
-        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #f59e0b;">
-            <i class="fa-solid fa-book-open" style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.75rem;"></i>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.reading }}</div>
+        <div class="glass glass-interactive" style="padding: 1.5rem; border-radius: 1rem; text-align: center;">
+            <div class="progress-ring">
+                <svg>
+                    <circle class="ring-bg" cx="45" cy="45" r="36"></circle>
+                    <circle class="ring-progress ring-warning" cx="45" cy="45" r="36" style="stroke-dashoffset: 226;" data-percentage="{{ 0 if total_books == 0 else (reading_stats.reading / total_books * 100)|round }}"></circle>
+                </svg>
+                <span class="ring-text">{{ reading_stats.reading }}</span>
+            </div>
             <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">In Progress</div>
         </div>
-        <div class="glass" style="padding: 1.5rem; border-radius: 1rem; text-align: center; border-left: 4px solid #10b981;">
-            <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: #10b981; margin-bottom: 0.75rem;"></i>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">{{ reading_stats.finished }}</div>
+        <div class="glass glass-interactive" style="padding: 1.5rem; border-radius: 1rem; text-align: center;">
+            <div class="progress-ring">
+                <svg>
+                    <circle class="ring-bg" cx="45" cy="45" r="36"></circle>
+                    <circle class="ring-progress ring-success" cx="45" cy="45" r="36" style="stroke-dashoffset: 226;" data-percentage="{{ 0 if total_books == 0 else (reading_stats.finished / total_books * 100)|round }}"></circle>
+                </svg>
+                <span class="ring-text">{{ reading_stats.finished }}</span>
+            </div>
             <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Completed</div>
         </div>
     </div>
@@ -429,9 +444,42 @@ function showSection(sectionId, element) {
     element.classList.add('active');
 }
 
+function initProgressRings() {
+    const rings = document.querySelectorAll('.ring-progress');
+    rings.forEach(ring => {
+        const percent = ring.getAttribute('data-percentage');
+        if (percent !== null) {
+            // 226 is the circumference of r=36
+            const offset = 226 - (percent / 100) * 226;
+            // Add a small delay for visual effect
+            setTimeout(() => {
+                ring.style.strokeDashoffset = offset;
+            }, 300);
+        }
+    });
+}
+
+function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-enter').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+    });
+}
+
 // Initialize components
 document.addEventListener('DOMContentLoaded', function() {
     initAIChat();
+    initProgressRings();
+    initScrollAnimations();
 });
 </script>
 <style>

@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .home-hero {
+        min-height: 88vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 4rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .home-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 700px 500px at 50% -10%, rgba(99, 102, 241, 0.22) 0%, transparent 70%),
+            radial-gradient(ellipse 400px 300px at 15% 80%, rgba(236, 72, 153, 0.14) 0%, transparent 70%),
+            radial-gradient(ellipse 350px 300px at 85% 70%, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+        z-index: 0;
+        animation: heroPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroPulse {
+        0%   { opacity: 0.7; transform: scale(1); }
+        100% { opacity: 1; transform: scale(1.06); }
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #a5b4fc;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.45rem 1.1rem;
+        border-radius: 999px;
+        margin-bottom: 2rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        animation: fadeUpEnter 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+    }
+
+    [data-theme="light"] .hero-badge {
+        background: rgba(99, 102, 241, 0.08);
+        border-color: rgba(99, 102, 241, 0.25);
+        color: #6366f1;
+    }
+
+    .hero-title {
+        font-size: clamp(2.8rem, 6vw, 5.2rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.05;
+        margin-bottom: 1.5rem;
+        animation: fadeUpEnter 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+    }
+
+    .hero-title .gradient-text {
+        background: linear-gradient(135deg, #a5b4fc 0%, #ec4899 50%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    [data-theme="light"] .hero-title .gradient-text {
+        background: linear-gradient(135deg, #6366f1 0%, #db2777 50%, #0891b2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-sub {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        max-width: 540px;
+        margin: 0 auto 3rem;
+        line-height: 1.75;
+        animation: fadeUpEnter 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+    }
+
+    .hero-ctas {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeUpEnter 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+    }
+
+    .btn-hero-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+        color: white;
+        padding: 1rem 2.25rem;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.55);
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 18px 40px -8px rgba(99, 102, 241, 0.65);
+    }
+
+    .btn-hero-secondary {
+        background: var(--surface);
+        color: var(--text-primary);
+        padding: 1rem 2.25rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--surface-border);
+        backdrop-filter: blur(10px);
+        transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+    }
+
+    .btn-hero-secondary:hover {
+        transform: translateY(-2px);
+        background: rgba(99, 102, 241, 0.08);
+        box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.2);
+    }
+
+    .section-label {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #a5b4fc;
+        margin-bottom: 0.75rem;
+    }
+
+    [data-theme="light"] .section-label { color: #6366f1; }
+
+    .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--surface-border);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275),
+                    box-shadow 0.4s ease,
+                    border-color 0.3s;
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .feature-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 1.5rem 1.5rem 0 0;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .feature-card.indigo::after   { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .feature-card.pink::after     { background: linear-gradient(90deg, #ec4899, #f472b6); }
+    .feature-card.amber::after    { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .feature-card.emerald::after  { background: linear-gradient(90deg, #10b981, #34d399); }
+    .feature-card.violet::after   { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .feature-card.cyan::after     { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+
+    .feature-card:hover {
+        transform: translateY(-10px) scale(1.01);
+        border-color: rgba(99, 102, 241, 0.35);
+        box-shadow: 0 24px 40px -12px rgba(0,0,0,0.25);
+    }
+
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-strip {
+        margin: 2rem 0 4rem;
+        border-radius: 2rem;
+        overflow: hidden;
+        position: relative;
+        padding: 4rem 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(236,72,153,0.15) 50%, rgba(6,182,212,0.12) 100%);
+        border: 1px solid rgba(99,102,241,0.2);
+    }
+
+    .cta-strip::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 700px 400px at 50% 50%, rgba(99,102,241,0.15) 0%, transparent 80%);
+        pointer-events: none;
+    }
+</style>
+
+<!-- ===== HERO ===== -->
+<div class="home-hero">
+    <div style="position: relative; z-index: 1; max-width: 820px; margin: 0 auto;">
+        <div class="hero-badge">
+            <i class="fa-solid fa-sparkles"></i>
+            AI-Powered Academic Platform
+        </div>
+
+        <h1 class="hero-title">
+            Learn Smarter,<br>
+            <span class="gradient-text">Achieve More</span>
+        </h1>
+
+        <p class="hero-sub">
+            RUBRIC brings your library, evaluations, assignments and an AI assistant together in one beautifully designed academic hub.
+        </p>
+
+        <div class="hero-ctas">
+            <a href="{{ url_for('register') }}" class="btn-hero-primary">
+                <i class="fa-solid fa-rocket"></i> Get Started — It's Free
+            </a>
+            <a href="{{ url_for('login') }}" class="btn-hero-secondary">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FEATURES ===== -->
+<div style="padding: 1rem 0 5rem;">
+    <div style="text-align: center; margin-bottom: 3.5rem;" class="animate-enter">
+        <span class="section-label">Features</span>
+        <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 1rem;">Built for serious students</h2>
+        <p style="font-size: 1.05rem; color: var(--text-secondary); max-width: 500px; margin: 0 auto;">Everything you need to organize, learn, and excel — in one place.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; padding: 0 1rem;">
+
+        <div class="feature-card indigo animate-enter stagger-2">
+            <div class="feature-icon" style="background: rgba(99,102,241,0.12); color: #818cf8;">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">Smart Library</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Upload and read digital books with automatic progress tracking — see exactly where you left off in every book.</p>
+        </div>
+
+        <div class="feature-card pink animate-enter stagger-3">
+            <div class="feature-icon" style="background: rgba(236,72,153,0.12); color: #f472b6;">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">AI Assistant</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Ask questions about your books, get personalized study tips and recommendations powered by Google Gemini.</p>
+        </div>
+
+        <div class="feature-card amber animate-enter stagger-4">
+            <div class="feature-icon" style="background: rgba(245,158,11,0.12); color: #fbbf24;">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">Evaluations & Tests</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Take AI-generated class evaluations and view instant results with detailed answer breakdowns.</p>
+        </div>
+
+        <div class="feature-card emerald animate-enter stagger-5">
+            <div class="feature-icon" style="background: rgba(16,185,129,0.12); color: #34d399;">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">Progress Analytics</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Interactive circular progress rings and dashboards visualize your reading journey at a glance.</p>
+        </div>
+
+        <div class="feature-card violet animate-enter stagger-6">
+            <div class="feature-icon" style="background: rgba(139,92,246,0.12); color: #a78bfa;">
+                <i class="fa-solid fa-tasks"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">Assignments</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Submit assignments, receive grades and track your academic performance — all in one streamlined dashboard.</p>
+        </div>
+
+        <div class="feature-card cyan animate-enter stagger-7">
+            <div class="feature-icon" style="background: rgba(6,182,212,0.12); color: #22d3ee;">
+                <i class="fa-solid fa-envelope"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.6rem;">Messaging</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; margin: 0;">Communicate directly with your teacher and receive admin announcements in real time.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== CTA ===== -->
+<div class="cta-strip animate-enter">
+    <div style="position: relative; z-index: 1; max-width: 600px; margin: 0 auto;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: float 3s ease-in-out infinite;">🎓</div>
+        <h2 style="font-size: 2.25rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 1rem;">Ready to level up?</h2>
+        <p style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 2.5rem; line-height: 1.65;">Join your classmates on RUBRIC and make every study session count.</p>
+        <a href="{{ url_for('register') }}" class="btn-hero-primary" style="font-size: 1.05rem; padding: 1.1rem 3rem;">
+            Start for Free Today →
+        </a>
+        <p style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">No credit card required &nbsp;·&nbsp; Free forever for students</p>
+    </div>
+</div>
+
+<style>
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-enter').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+    });
+});
+</script>
+{% endblock %}

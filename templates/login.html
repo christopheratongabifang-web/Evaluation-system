@@ -1,31 +1,97 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="auth-container glass">
-    <h2 style="margin-bottom: 2rem; text-align: center;">Welcome Back</h2>
-    <form method="POST" action="{{ url_for('login') }}">
-        <div class="form-group">
-            <label for="username">Email Address</label>
-            <input type="email" id="username" name="username" class="form-control" required placeholder="Enter email" value="{{ username|default('') }}">
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-wrapper">
-                <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" autocomplete="current-password">
-                <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="checkbox" id="remember" name="remember" style="accent-color: var(--primary);" {% if remember %}checked{% endif %}>
-                    <label for="remember" style="margin: 0; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">Remember me</label>
+<div class="auth-split-container animate-enter stagger-1">
+
+    <!-- Left Graphic Panel -->
+    <div class="auth-graphic hero-mesh">
+        <div style="position: relative; z-index: 2;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem;">
+                <div style="width: 3rem; height: 3rem; border-radius: 0.75rem; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-book-open-reader" style="color: white;"></i>
                 </div>
-                <a href="{{ url_for('forgot_password') }}" style="color: var(--text-secondary); font-size: 0.875rem; text-decoration: none;">Forgot Password?</a>
+                <span style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: white;">RUBRIC</span>
+            </div>
+
+            <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 1.5rem; color: white;">
+                Your Academic<br>
+                <span style="background: linear-gradient(135deg, #a5b4fc, #f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hub Awaits</span>
+            </h2>
+            <p style="color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.7; max-width: 320px; margin-bottom: 2.5rem;">
+                Access your library, track reading progress, take evaluations and chat with your AI assistant — all in one place.
+            </p>
+
+            <!-- Feature Pills -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
+                    <i class="fa-solid fa-book" style="color: #a5b4fc; width: 1rem;"></i>
+                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Smart digital library</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
+                    <i class="fa-solid fa-robot" style="color: #f9a8d4; width: 1rem;"></i>
+                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">AI-powered assistant</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
+                    <i class="fa-solid fa-chart-line" style="color: #6ee7b7; width: 1rem;"></i>
+                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Progress analytics</span>
+                </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Sign In</button>
-    </form>
-    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-        Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--primary); text-decoration: none;">Register</a>
-    </p>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="auth-form-wrapper">
+        <div style="width: 100%; max-width: 380px;">
+            <div style="margin-bottom: 2.5rem;">
+                <h2 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;">Welcome back</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Sign in to continue your learning journey</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="username" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Email</label>
+                    <div style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-regular fa-envelope" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem;"></i>
+                        <input type="email" id="username" name="username" class="form-control glass-input" required
+                            placeholder="you@example.com"
+                            value="{{ username|default('') }}"
+                            style="padding-left: 2.75rem;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Password</label>
+                    <div class="password-wrapper" style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-solid fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; z-index: 1;"></i>
+                        <input type="password" id="password" name="password" class="form-control glass-input" required
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            style="padding-left: 2.75rem;">
+                        <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="remember" name="remember" {% if remember %}checked{% endif %}>
+                        <span class="checkmark"></span>
+                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Remember me</span>
+                    </label>
+                    <a href="{{ url_for('forgot_password') }}" style="color: var(--primary); font-size: 0.875rem; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; border-radius: 0.9rem; font-size: 1rem; font-weight: 700; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transition: transform 0.2s, box-shadow 0.2s;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 30px -5px rgba(79,70,229,0.5)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px -5px rgba(79,70,229,0.4)'">
+                    <i class="fa-solid fa-arrow-right-to-bracket" style="margin-right: 0.5rem;"></i> Sign In
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.75rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Don't have an account?
+                <a href="{{ url_for('register') }}" style="color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 0.25rem;">Create one →</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

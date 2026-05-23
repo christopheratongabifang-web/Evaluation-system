@@ -1,39 +1,112 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="auth-container glass">
-    <h2 style="margin-bottom: 2rem; text-align: center;">Create Account</h2>
-    <form method="POST" action="{{ url_for('register') }}">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username">
-        </div>
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" class="form-control" required placeholder="you@example.com" oninput="this.value = this.value.toLowerCase()">
-        </div>
-        <div class="form-group">
-            <label for="gender">Gender</label>
-            <select id="gender" name="gender" class="form-control" required>
-                <option value="" disabled selected>Select your gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-wrapper">
-                <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••">
-                <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+<div class="auth-split-container animate-enter stagger-1">
+
+    <!-- Left Graphic Panel -->
+    <div class="auth-graphic hero-mesh">
+        <div style="position: relative; z-index: 2;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem;">
+                <div style="width: 3rem; height: 3rem; border-radius: 0.75rem; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-book-open-reader" style="color: white;"></i>
+                </div>
+                <span style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: white;">RUBRIC</span>
             </div>
-            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">Password must be at least 8 characters long, include at least one uppercase letter and one special character.</p>
+
+            <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 1.5rem; color: white;">
+                Start your<br>
+                <span style="background: linear-gradient(135deg, #a5b4fc, #f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Learning Journey</span>
+            </h2>
+            <p style="color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.7; max-width: 320px; margin-bottom: 2.5rem;">
+                Join thousands of students who are already leveling up their academics with RUBRIC's smart tools.
+            </p>
+
+            <!-- Stats Row -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+                <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 1rem; padding: 1rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: white;">📚</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 0.25rem;">Library</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 1rem; padding: 1rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: white;">🤖</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 0.25rem;">AI Chat</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 1rem; padding: 1rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: white;">📝</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 0.25rem;">Tests</div>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Register</button>
-    </form>
-    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-        Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary); text-decoration: none;">Login</a>
-    </p>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="auth-form-wrapper">
+        <div style="width: 100%; max-width: 400px;">
+            <div style="margin-bottom: 2.5rem;">
+                <h2 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;">Create account</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Fill in your details to get started for free</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="form-group">
+                    <label for="username" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Username</label>
+                    <div style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-solid fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem;"></i>
+                        <input type="text" id="username" name="username" class="form-control glass-input" required
+                            placeholder="Your display name"
+                            style="padding-left: 2.75rem;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Email</label>
+                    <div style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-regular fa-envelope" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem;"></i>
+                        <input type="email" id="email" name="email" class="form-control glass-input" required
+                            placeholder="you@example.com"
+                            oninput="this.value = this.value.toLowerCase()"
+                            style="padding-left: 2.75rem;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="gender" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Gender</label>
+                    <div style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-solid fa-venus-mars" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; z-index: 1;"></i>
+                        <select id="gender" name="gender" class="form-control glass-input" required style="padding-left: 2.75rem;">
+                            <option value="" disabled selected>Select your gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Password</label>
+                    <div class="password-wrapper" style="position: relative; margin-top: 0.4rem;">
+                        <i class="fa-solid fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; z-index: 1;"></i>
+                        <input type="password" id="password" name="password" class="form-control glass-input" required
+                            placeholder="••••••••"
+                            style="padding-left: 2.75rem;">
+                        <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">Min 8 characters, one uppercase letter &amp; one special character.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; border-radius: 0.9rem; font-size: 1rem; font-weight: 700; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transition: transform 0.2s, box-shadow 0.2s; margin-top: 0.5rem;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 30px -5px rgba(79,70,229,0.5)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px -5px rgba(79,70,229,0.4)'">
+                    <i class="fa-solid fa-rocket" style="margin-right: 0.5rem;"></i> Create My Account
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.75rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Already have an account?
+                <a href="{{ url_for('login') }}" style="color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 0.25rem;">Sign in →</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

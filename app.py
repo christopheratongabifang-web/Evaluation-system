@@ -4,7 +4,7 @@ import io
 from types import SimpleNamespace
 from difflib import SequenceMatcher
 from pypdf import PdfReader
-import google.generativeai as genai
+from google import genai
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, send_from_directory, session, jsonify, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://library_user:Abifang@local
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
 app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY', 'AIza...') # Replace with actual key or set env var
-genai.configure(api_key=app.config['GEMINI_API_KEY'])
+client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
 
 # For password reset tokens
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -144,7 +144,7 @@ def books_with_user_progress(books, user_id):
 @app.before_request
 def require_profile():
     if current_user.is_authenticated and not current_user.is_admin:
-        allowed_endpoints = ['student_profile', 'logout', 'static']
+        allowed_endpoints = ['student_profile', 'logout', 'static', 'home']
         if request.endpoint and request.endpoint not in allowed_endpoints:
             profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
             if not profile or not profile.student_class:
@@ -152,6 +152,14 @@ def require_profile():
                 return redirect(url_for('student_profile'))
 
 @app.route('/')
+def home():
+    if current_user.is_authenticated:
+        if current_user.is_admin:
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('dashboard'))
+    return render_template('home.html')
+
+@app.route('/dashboard')
 @login_required
 def dashboard():
     view_as = request.args.get('view', 'default')
@@ -575,8 +583,6 @@ def ai_chat():
 def generate_ai_response(user_message, books, categories):
     """Generate AI responses using Google Gemini"""
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
         # Build context from user's library
         context = "The user has the following books in their library:\n"
         for book in books:
@@ -591,7 +597,10 @@ def generate_ai_response(user_message, books, categories):
         Provide a concise, friendly, and helpful response.
         """
         
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         return response.text
         
     except Exception as e:
@@ -1030,7 +1039,6 @@ def generate_questions_from_text(text):
     Generate questions using Google Gemini AI.
     """
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"""
         Analyze the following educational notes and generate 30 multiple-choice questions.
         For each question, provide 4 options (a, b, c, d) and indicate the correct answer.
@@ -1041,7 +1049,10 @@ def generate_questions_from_text(text):
         {text[:60000000000]}  # Limit text to stay within tokens
         """
         
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         # Extract JSON from response (handling potential markdown formatting)
         response_text = response.text
         if "```json" in response_text:
