@@ -1016,6 +1016,7 @@ def update_progress(book_id):
     final_status = normalize_reading_status(progress_target.status)
     if final_status == 'finished' and prev_status != 'finished':
         # log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')  # Temporarily disabled per user request
+        pass
 
     return jsonify({
         'success': True,
