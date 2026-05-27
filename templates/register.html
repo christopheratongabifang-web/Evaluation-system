@@ -70,6 +70,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="phone_number" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Phone Number</label>
+                    <div style="margin-top: 0.4rem;">
+                        <input type="tel" id="phone_number" name="phone_number" class="form-control glass-input" required
+                            style="width: 100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="gender" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Gender</label>
                     <div style="position: relative; margin-top: 0.4rem;">
                         <i class="fa-solid fa-venus-mars" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; z-index: 1;"></i>
@@ -109,4 +117,34 @@
         </div>
     </div>
 </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+<style>
+    .iti { width: 100%; }
+    .iti__flag-container { border-radius: 0.75rem 0 0 0.75rem; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const phoneInput = document.querySelector("#phone_number");
+    const iti = window.intlTelInput(phoneInput, {
+        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js",
+        initialCountry: "auto",
+        separateDialCode: true,
+        geoIpLookup: function(callback) {
+            fetch("https://ipapi.co/json")
+                .then(function(res) { return res.json(); })
+                .then(function(data) { callback(data.country_code); })
+                .catch(function() { callback("us"); });
+        }
+    });
+
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (phoneInput.value.trim()) {
+            phoneInput.value = iti.getNumber();
+        }
+    });
+});
+</script>
 {% endblock %}

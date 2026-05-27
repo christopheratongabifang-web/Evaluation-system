@@ -87,7 +87,7 @@
                     {% if evaluation.source_file %}
                     <div class="mb-4 p-3 bg-primary bg-opacity-10 rounded border border-primary">
                         <label class="form-label fw-bold text-primary"><i class="fas fa-file-pdf"></i> Original Notes Found</label>
-                        <p class="small text-muted mb-3">You uploaded a document when creating this evaluation. Would you like to generate more questions from it?</p>
+                        <p class="small text-muted mb-3">You uploaded a document when creating this evaluation. Generate questions from that exact file only.</p>
                         <button type="submit" name="use_original" value="true" class="btn btn-primary w-100">
                             <i class="fas fa-magic"></i> Generate from Original Notes
                         </button>
@@ -96,6 +96,12 @@
                         <span class="badge bg-secondary">OR UPLOAD NEW</span>
                     </div>
                     {% endif %}
+
+                    <div class="mb-4">
+                        <label for="num_questions" class="form-label fw-bold"><i class="fas fa-list-ol"></i> Number of Questions</label>
+                        <input type="number" class="form-control" id="num_questions" name="num_questions" value="10" min="1" max="100" style="padding: 0.75rem; width: 150px;">
+                        <div class="form-text">Ask the AI to generate exactly this number of MCQs from your notes.</div>
+                    </div>
                     
                     <div class="mb-4 p-3 bg-light rounded border">
                         <label for="ai_pdf" class="form-label fw-bold"><i class="fas fa-file-pdf"></i> Option 1: Upload a New PDF</label>

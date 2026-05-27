@@ -1,9 +1,50 @@
+.dashboard-section, .dashboard-hub, .dashboard-section *, .dashboard-hub *, .hero-mesh, .hero-mesh * {
+    color: #1A2C3E !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+}
+
+.hero-mesh h1, .hero-mesh h2, .hero-mesh h3, .hero-mesh p {
+    color: #1A2C3E !important;
+    font-weight: 800 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+/* Force dashboard text to be highly visible on warm backgrounds */
+.dashboard-section, .dashboard-hub, .dashboard-section *, .dashboard-hub * {
+    color: #1A2C3E !important;
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
     --primary: #6366f1;
     --primary-hover: #4f46e5;
-    --primary-light: rgba(99, 102, 241, 0.12);
+    --primary-light: rgba(99, 102, 241, 0.10);
+    --accent-pink: #db2777;
+    --accent-cyan: #0891b2;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --success: #059669;
+    --background: #EFF3F8;
+    --surface: rgba(255, 255, 255, 0.92);
+    --surface-solid: #ffffff;
+    --surface-border: rgba(99, 102, 241, 0.15);
+    --text-primary: #1A2C3E;
+    --text-secondary: #4b5580;
+    --sidebar-bg: #ffffff;
+    --navbar-bg: rgba(255, 255, 255, 0.85);
+    --input-bg: #ffffff;
+    --input-text: #1A2C3E;
+    --option-bg: #ffffff;
+    --option-text: #1A2C3E;
+}
+
+/* Dark theme override */
+[data-theme="dark"] {
+    --primary: #818cf8;
+    --background: #FDF7F0;
+    --primary-light: rgba(99, 102, 241, 0.15);
     --accent-pink: #ec4899;
     --accent-cyan: #06b6d4;
     --warning: #f59e0b;
@@ -18,11 +59,12 @@
     --sidebar-bg: rgba(8, 12, 26, 0.97);
     --navbar-bg: rgba(8, 12, 26, 0.88);
     --input-bg: rgba(8, 12, 26, 0.8);
-    --input-text: #eef0ff;
+    background: #FDF7F0;
     --option-bg: #0d1225;
     --option-text: #eef0ff;
 }
 
+/* Light theme explicit (same as :root default) */
 [data-theme="light"] {
     --primary: #6366f1;
     --primary-hover: #4f46e5;
@@ -31,41 +73,43 @@
     --accent-cyan: #0891b2;
     --warning: #d97706;
     --danger: #dc2626;
-    --success: #059669;
-    --background: #f4f5ff;
+    background: #FDF7F0;
+    --background: #EFF3F8;
     --surface: rgba(255, 255, 255, 0.95);
     --surface-solid: #ffffff;
     --surface-border: rgba(99, 102, 241, 0.15);
-    --text-primary: #0f0f23;
+    --text-primary: #1A2C3E;
     --text-secondary: #4b5580;
-    --sidebar-bg: rgba(244, 245, 255, 0.98);
-    --navbar-bg: rgba(244, 245, 255, 0.92);
-    --input-bg: #ffffff;
-    --input-text: #0f0f23;
+    --sidebar-bg: #ffffff;
+    --navbar-bg: rgba(255, 255, 255, 0.88);
+    background: #FDF7F0 !important;
+    --input-text: #1A2C3E;
     --option-bg: #ffffff;
-    --option-text: #0f0f23;
+    --option-text: #1A2C3E;
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    background: var(--background);
-    background-image:
-        radial-gradient(ellipse 900px 700px at 0% 0%, rgba(99, 102, 241, 0.2) 0px, transparent 60%),
-        radial-gradient(ellipse 600px 600px at 100% 20%, rgba(236, 72, 153, 0.12) 0px, transparent 60%),
-        radial-gradient(ellipse 500px 500px at 50% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 60%);
-    color: var(--text-primary);
+    background: #EFF3F8;
+    background-image: none;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background: #FDF7F0;
+    color: #1A2C3E;
     min-height: 100vh;
     margin: 0;
     display: flex;
     flex-direction: column;
+    transition: background 0.4s ease, color 0.4s ease;
 }
-
-
+    background: #FDF7F0;
 [data-theme="light"] body {
-    background-image:
-        radial-gradient(ellipse 900px 700px at 0% 0%, rgba(99, 102, 241, 0.07) 0px, transparent 60%),
-        radial-gradient(ellipse 600px 600px at 100% 20%, rgba(236, 72, 153, 0.05) 0px, transparent 60%),
-        radial-gradient(ellipse 500px 500px at 50% 100%, rgba(6, 182, 212, 0.04) 0px, transparent 60%);
+    background: #EFF3F8;
+    background-image: none;
+    background: #FDF7F0;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #1A2C3E;
 }
 
 /* Glassmorphism utility */
@@ -134,7 +178,7 @@ body {
 
 .nav-links a:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--primary-light);
 }
 
 .user-tag {
@@ -329,6 +373,141 @@ option, select option {
 .password-toggle:hover {
     color: var(--text-primary);
 }
+
+
+/* --------------------------------------------------- */
+/* Login Page Styling – Clean, Centered, Premium Look */
+/* --------------------------------------------------- */
+
+/* Full-screen wrapper to center the login card */
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--background); /* Soft Cloud Blue */
+    padding: 2rem;
+}
+
+/* Card container with glass‑morphism effect */
+.login-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+}
+
+/* Input fields – subtle glass look */
+.glass-input {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--surface-border);
+    color: var(--text-primary);
+    padding: 0.75rem 0.75rem 0.75rem 2.5rem; /* space for icon */
+    border-radius: 0.5rem;
+    transition: background 0.2s, border-color 0.2s;
+}
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* Custom checkbox styling */
+.custom-checkbox {
+    position: relative;
+    padding-left: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1.2rem;
+    width: 1.2rem;
+    background: var(--input-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 0.2rem;
+}
+.custom-checkbox input:checked ~ .checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+    left: 0.35rem;
+    top: 0.05rem;
+    width: 0.3rem;
+    height: 0.6rem;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Password toggle eye icon */
+.password-toggle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+.password-toggle:hover {
+    color: var(--primary);
+}
+
+/* Ensure links use theme primary color */
+.login-card a {
+    color: var(--primary);
+    text-decoration: none;
+}
+.login-card a:hover {
+    text-decoration: underline;
+}
+
+/* Override form label color for contrast */
+.login-card label {
+    display: block;
+    text-align: left;
+    margin-bottom: 0.4rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Make the submit button stand out */
+.login-card .btn-primary {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.login-card .btn-primary:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.2);
+}
+
+/* End of login page styles */
 
 /* Book Grid */
 .book-grid {
@@ -1017,7 +1196,7 @@ h1, h2, h3 {
 
 .sidebar-nav-item:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--primary-light);
     transform: translateX(4px);
 }
 
@@ -1079,11 +1258,8 @@ h1, h2, h3 {
 
 /* Animated Mesh Gradient Background for Hero */
 .hero-mesh {
-    background:
-        linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(236, 72, 153, 0.25) 50%, rgba(6, 182, 212, 0.2) 100%),
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.4) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.3) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.25) 0px, transparent 50%);
+    background: #EFF3F8 !important;
+    background-image: none !important;
     background-size: 200% 200%;
     animation: meshGradient 10s ease infinite;
     position: relative;
@@ -1094,14 +1270,66 @@ h1, h2, h3 {
 }
 
 [data-theme="light"] .hero-mesh {
-    background:
-        linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.1) 50%, rgba(6, 182, 212, 0.1) 100%),
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.12) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+    background: #EFF3F8;
+    background-image: none;
     background-size: 200% 200%;
     animation: meshGradient 10s ease infinite;
     box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.2);
+}
+
+/* Global black text for quick visibility */
+/* Premium dark gradient background */
+body {
+    background: linear-gradient(135deg, #09090b 0%, #111827 100%);
+    background-attachment: fixed;
+    background-size: cover;
+    color: var(--text-primary);
+}
+
+
+.navbar,
+.glass,
+.card,
+.stat-box,
+.auth-container,
+.sidebar,
+.sidebar-user-card,
+.hero-mesh,
+.feature-icon,
+input,
+select,
+textarea,
+.form-control,
+.form-select,
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+    background: #ffffff !important;
+    border-color: #d1d5db !important;
+}
+
+input,
+select,
+textarea,
+.form-control,
+.form-select,
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+    color: #000000 !important;
+}
+
+a,
+.nav-links a,
+.navbar-brand,
+.sidebar-brand,
+.sidebar-nav-item,
+.sidebar-nav-item.active {
+    color: #000000 !important;
 }
 
 @keyframes meshGradient {

@@ -1,97 +1,490 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – RUBRIC Evaluation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
 
-{% block content %}
-<div class="auth-split-container animate-enter stagger-1">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <!-- Left Graphic Panel -->
-    <div class="auth-graphic hero-mesh">
-        <div style="position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem;">
-                <div style="width: 3rem; height: 3rem; border-radius: 0.75rem; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; backdrop-filter: blur(10px);">
-                    <i class="fa-solid fa-book-open-reader" style="color: white;"></i>
-                </div>
-                <span style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: white;">RUBRIC</span>
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #080c1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 700px 500px at 50% -10%, rgba(99, 102, 241, 0.22) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 15% 80%, rgba(236, 72, 153, 0.14) 0%, transparent 70%),
+                radial-gradient(ellipse 350px 300px at 85% 70%, rgba(6, 182, 212, 0.12) 0%, transparent 70%),
+                #080c1a;
+            z-index: 0;
+            animation: loginPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes loginPulse {
+            0%   { opacity: 0.75; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.06); }
+        }
+
+        /* Animated floating gradient border */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .login-card {
+            background: rgba(18, 24, 48, 0.78);
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.28), 0 18px 40px -18px rgba(99, 102, 241, 0.55);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.22);
+            transition: box-shadow 0.3s;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            z-index: 0;
+            border-radius: 1.7rem;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #06b6d4 100%);
+            opacity: 0.2;
+            filter: blur(6px);
+            pointer-events: none;
+        }
+
+        .login-card:hover {
+            box-shadow: 0 26px 70px rgba(0,0,0,0.34), 0 18px 44px -14px rgba(99, 102, 241, 0.65);
+        }
+
+        /* Glassmorphism effect for brand header */
+        .brand-header .brand-icon {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            box-shadow: 0 10px 30px -12px rgba(99, 102, 241, 0.7);
+        }
+
+        .brand-header h1 {
+            background: linear-gradient(135deg, #a5b4fc 0%, #ec4899 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 2rem 1.2rem;
+            }
+        }
+
+        /* Brand header */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-header .brand-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(99, 102, 241, 0.12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #a5b4fc;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 30px -12px rgba(99, 102, 241, 0.7);
+        }
+
+        .brand-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc 0%, #ec4899 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        /* Login card */
+
+        /* Remove floating effect and add a premium background */
+        .login-card {
+            background: rgba(18, 24, 48, 0.82);
+            border-radius: 1.5rem;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.28), 0 18px 40px -18px rgba(99, 102, 241, 0.55);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.22);
+            transition: box-shadow 0.3s;
+        }
+
+        .login-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 700px 500px at 50% -10%, rgba(99, 102, 241, 0.22) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 15% 80%, rgba(236, 72, 153, 0.14) 0%, transparent 70%),
+                radial-gradient(ellipse 350px 300px at 85% 70%, rgba(6, 182, 212, 0.12) 0%, transparent 70%),
+                #080c1a;
+        }
+
+        .login-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #eef0ff;
+            margin-bottom: 0.4rem;
+        }
+
+        .login-card .subtitle {
+            color: #8892b0;
+            font-size: 0.92rem;
+            margin-bottom: 1.75rem;
+        }
+
+        /* Form labels */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.4rem;
+        }
+
+        /* Input fields */
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8892b0;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.75rem;
+            border: 1.5px solid rgba(99, 102, 241, 0.18);
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: #eef0ff;
+            background: rgba(8, 12, 26, 0.8);
+            transition: all 0.25s ease;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #68718f;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(8, 12, 26, 0.95);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .input-wrapper input:focus + .input-icon,
+        .input-wrapper input:focus ~ .input-icon {
+            color: #a5b4fc;
+        }
+
+        /* Password toggle */
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #8892b0;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            color: #a5b4fc;
+        }
+
+        /* Options row */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        /* Custom checkbox */
+        .custom-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.88rem;
+            color: #8892b0;
+        }
+
+        .custom-check input[type="checkbox"] {
+            display: none;
+        }
+
+        .custom-check .check-box {
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid rgba(99, 102, 241, 0.35);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .custom-check .check-box i {
+            font-size: 0.6rem;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .custom-check input:checked ~ .check-box {
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            border-color: #6366f1;
+        }
+
+        .custom-check input:checked ~ .check-box i {
+            opacity: 1;
+        }
+
+        .forgot-link {
+            font-size: 0.88rem;
+            color: #a5b4fc;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #ec4899;
+            text-decoration: underline;
+        }
+
+        /* Submit button */
+        .btn-login {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            border: none;
+            border-radius: 0.75rem;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.55);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px -8px rgba(99, 102, 241, 0.65);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login i {
+            margin-right: 0.5rem;
+        }
+
+        /* Footer link */
+        .card-footer-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #8892b0;
+        }
+
+        .card-footer-text a {
+            color: #a5b4fc;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .card-footer-text a:hover {
+            color: #ec4899;
+        }
+
+        .card-footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Flash messages */
+        .alert {
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="brand-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-book-open-reader"></i>
             </div>
-
-            <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 1.5rem; color: white;">
-                Your Academic<br>
-                <span style="background: linear-gradient(135deg, #a5b4fc, #f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hub Awaits</span>
-            </h2>
-            <p style="color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.7; max-width: 320px; margin-bottom: 2.5rem;">
-                Access your library, track reading progress, take evaluations and chat with your AI assistant — all in one place.
-            </p>
-
-            <!-- Feature Pills -->
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
-                    <i class="fa-solid fa-book" style="color: #a5b4fc; width: 1rem;"></i>
-                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Smart digital library</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
-                    <i class="fa-solid fa-robot" style="color: #f9a8d4; width: 1rem;"></i>
-                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">AI-powered assistant</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 999px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
-                    <i class="fa-solid fa-chart-line" style="color: #6ee7b7; width: 1rem;"></i>
-                    <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Progress analytics</span>
-                </div>
-            </div>
+            <h1>RUBRIC</h1>
         </div>
-    </div>
 
-    <!-- Right Form Panel -->
-    <div class="auth-form-wrapper">
-        <div style="width: 100%; max-width: 380px;">
-            <div style="margin-bottom: 2.5rem;">
-                <h2 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;">Welcome back</h2>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Sign in to continue your learning journey</p>
-            </div>
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} mb-3">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="login-card">
+            <h2>Welcome back</h2>
+            <p class="subtitle">Sign in to your account to continue</p>
 
             <form method="POST" action="{{ url_for('login') }}">
                 <div class="form-group">
-                    <label for="username" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Email</label>
-                    <div style="position: relative; margin-top: 0.4rem;">
-                        <i class="fa-regular fa-envelope" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem;"></i>
-                        <input type="email" id="username" name="username" class="form-control glass-input" required
-                            placeholder="you@example.com"
-                            value="{{ username|default('') }}"
-                            style="padding-left: 2.75rem;">
+                    <label for="username">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="username" name="username"
+                               placeholder="you@example.com"
+                               value="{{ username|default('') }}" required>
+                        <i class="fa-regular fa-envelope input-icon"></i>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.03em; text-transform: uppercase;">Password</label>
-                    <div class="password-wrapper" style="position: relative; margin-top: 0.4rem;">
-                        <i class="fa-solid fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; z-index: 1;"></i>
-                        <input type="password" id="password" name="password" class="form-control glass-input" required
-                            placeholder="••••••••"
-                            autocomplete="current-password"
-                            style="padding-left: 2.75rem;">
-                        <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password"
+                               placeholder="Enter your password"
+                               autocomplete="current-password" required>
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <button type="button" class="password-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <label class="custom-checkbox">
+                <div class="options-row">
+                    <label class="custom-check">
                         <input type="checkbox" id="remember" name="remember" {% if remember %}checked{% endif %}>
-                        <span class="checkmark"></span>
-                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Remember me</span>
+                        <span class="check-box"><i class="fa-solid fa-check"></i></span>
+                        <span>Remember me</span>
                     </label>
-                    <a href="{{ url_for('forgot_password') }}" style="color: var(--primary); font-size: 0.875rem; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                    <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; border-radius: 0.9rem; font-size: 1rem; font-weight: 700; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transition: transform 0.2s, box-shadow 0.2s;"
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 30px -5px rgba(79,70,229,0.5)'"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px -5px rgba(79,70,229,0.4)'">
-                    <i class="fa-solid fa-arrow-right-to-bracket" style="margin-right: 0.5rem;"></i> Sign In
+                <button type="submit" class="btn-login">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
                 </button>
             </form>
 
-            <p style="text-align: center; margin-top: 1.75rem; color: var(--text-secondary); font-size: 0.9rem;">
-                Don't have an account?
-                <a href="{{ url_for('register') }}" style="color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 0.25rem;">Create one →</a>
+            <p class="card-footer-text">
+                Don't have an account? <a href="{{ url_for('register') }}">Create one &rarr;</a>
             </p>
         </div>
     </div>
-</div>
-{% endblock %}
+    <div class="login-bg"></div>
+
+    <script>
+        // Password visibility toggle
+        const toggleBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        if (toggleBtn && passwordInput) {
+            toggleBtn.addEventListener('click', function () {
+                const icon = this.querySelector('i');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

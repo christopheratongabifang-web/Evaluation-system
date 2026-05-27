@@ -276,6 +276,7 @@
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">
                         by {{ book.author }}
                         {% if book.last_read_at %} · Last opened {{ book.last_read_at.strftime('%b %d, %Y') }}{% endif %}
+                        {% if book.current_page %} · Page {{ book.current_page }}{% endif %}
                     </div>
                 </div>
                 <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-sm" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 0.5rem; padding: 0.4rem 0.9rem; font-weight: 600; white-space: nowrap;">

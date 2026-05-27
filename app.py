@@ -1,6 +1,7 @@
 import os
 import re
 import io
+import ssl
 from types import SimpleNamespace
 from difflib import SequenceMatcher
 from pypdf import PdfReader
@@ -25,14 +26,73 @@ from models import (
     AcademicClass
 )
 
+def load_dotenv_file(path):
+    if not os.path.exists(path):
+        return
+    with open(path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' not in line:
+                continue
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and value and key not in os.environ:
+                os.environ[key] = value
+
+
+def quote_env_value(value):
+    text = str(value).replace('"', '\\"')
+    if any(ch.isspace() for ch in text) or text == '' or '#' in text:
+        return f'"{text}"'
+    return text
+
+
+def update_env_file(path, updates):
+    lines = []
+    existing_keys = set()
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in stripped:
+                    lines.append(line)
+                    continue
+                key, _ = stripped.split('=', 1)
+                key = key.strip()
+                if key in updates:
+                    value = quote_env_value(updates[key])
+                    lines.append(f'{key}={value}\n')
+                    existing_keys.add(key)
+                else:
+                    lines.append(line)
+    for key, value in updates.items():
+        if key not in existing_keys:
+            lines.append(f'{key}={quote_env_value(value)}\n')
+    with open(path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+
+
+# Load local environment variables from .env if present
+load_dotenv_file(os.path.join(os.path.dirname(__file__), '.env'))
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_super_secret_key_change_in_production'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_super_secret_key_change_in_production')
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://library_user:Abifang@localhost:5432/library_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://library_user:Abifang@localhost:5432/library_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
-app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY', 'AIza...') # Replace with actual key or set env var
-client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
+app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY')
+app.config['PREFERRED_URL_SCHEME'] = 'https'
+
+# Configure Gemini client only when a real key is present.
+def is_gemini_api_configured():
+    key = app.config.get('GEMINI_API_KEY', '')
+    return bool(key and key.strip() and key not in ['AIza...', 'your-real-gemini-api-key'])
+
+client = genai.Client(api_key=app.config['GEMINI_API_KEY']) if is_gemini_api_configured() else None
 
 # For password reset tokens
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -120,6 +180,21 @@ def book_progress_view(book, progress=None, fallback_to_book=False):
             'progress': None
         })
     return SimpleNamespace(**data)
+
+def is_pdf_file(file_path):
+    return isinstance(file_path, str) and file_path.lower().endswith('.pdf')
+
+def get_pdf_page_count(book):
+    if not is_pdf_file(book.file_path):
+        return None
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], book.file_path)
+        if os.path.exists(file_path):
+            reader = PdfReader(file_path)
+            return len(reader.pages)
+    except Exception as e:
+        print(f"Error reading PDF page count for {book.title}: {e}")
+    return None
 
 def books_with_user_progress(books, user_id):
     book_ids = [book.id for book in books]
@@ -414,6 +489,7 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip().lower()
+        phone_number = request.form.get('phone_number', '').strip()
         password = request.form.get('password', '')
         gender = request.form.get('gender', '').strip()
         
@@ -423,6 +499,10 @@ def register():
             
         if User.query.filter_by(email=email).first():
             flash('Email already exists', 'danger')
+            return redirect(url_for('register'))
+
+        if phone_number and User.query.filter_by(phone_number=phone_number).first():
+            flash('Phone number already in use', 'danger')
             return redirect(url_for('register'))
 
         import re
@@ -437,7 +517,7 @@ def register():
             
         is_first_admin = User.query.filter_by(is_admin=True).first() is None
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(username=username, email=email, password_hash=hashed_password, is_admin=is_first_admin, gender=gender if gender else None)
+        user = User(username=username, email=email, phone_number=phone_number, password_hash=hashed_password, is_admin=is_first_admin, gender=gender if gender else None)
         db.session.add(user)
         db.session.commit()
         log_action('User Registration', f'New user registered: {username}')
@@ -518,45 +598,62 @@ def login():
 
     return render_template('login.html', username=username, remember=remember)
 
+# ---------- FIXED forgot_password ROUTE ----------
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
+        phone_number = request.form.get('phone_number')
+        user = User.query.filter_by(phone_number=phone_number).first()
         if user:
-            token = s.dumps(email, salt='password-reset-salt')
-            reset_link = url_for('reset_password', token=token, _external=True)
-            # MOCK EMAIL: We just print to console and flash a message.
-            print(f"\n{'='*50}\nPASSWORD RESET LINK: {reset_link}\n{'='*50}\n")
-            flash('A password reset link has been generated. Check the terminal output for the link!', 'success')
+            import secrets
+            otp = f"{secrets.randbelow(900000) + 100000}"   # 100000 to 999999 inclusive
+            user.reset_otp = otp
+            user.reset_otp_expires_at = datetime.utcnow() + timedelta(minutes=15)
+            db.session.commit()
+            
+            session['reset_phone'] = phone_number
+            print(f"\n{'='*50}\nSMS SENT TO {phone_number}: OTP is {otp}\n{'='*50}\n")
+            flash(f'An SMS containing your OTP has been sent to {phone_number}.', 'success')
+            return redirect(url_for('reset_password_otp'))
         else:
-            flash('Email address not found.', 'danger')
-        return redirect(url_for('login'))
+            flash('Phone number not found.', 'danger')
+            return redirect(url_for('login'))
     return render_template('forgot_password.html')
+# -------------------------------------------------
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    try:
-        email = s.loads(token, salt='password-reset-salt', max_age=3600)
-    except SignatureExpired:
-        flash('The password reset link has expired.', 'danger')
-        return redirect(url_for('forgot_password'))
-    except BadTimeSignature:
-        flash('Invalid password reset link.', 'danger')
+@app.route('/reset_password_otp', methods=['GET', 'POST'])
+def reset_password_otp():
+    phone_number = session.get('reset_phone')
+    if not phone_number:
+        flash('Session expired or invalid. Please request a new password reset.', 'danger')
         return redirect(url_for('forgot_password'))
 
     if request.method == 'POST':
+        otp = request.form.get('otp', '').strip()
         password = request.form.get('password')
+        
+        user = User.query.filter_by(phone_number=phone_number).first()
+        if not user or not user.reset_otp or user.reset_otp != otp:
+            flash('Invalid OTP. Please try again.', 'danger')
+            return redirect(url_for('reset_password_otp'))
+            
+        if user.reset_otp_expires_at and datetime.utcnow() > user.reset_otp_expires_at:
+            flash('The OTP has expired. Please request a new one.', 'danger')
+            return redirect(url_for('forgot_password'))
+
         if not is_valid_password(password):
             flash('Password must include at least one uppercase letter and one special character.', 'danger')
-            return redirect(request.url)
+            return redirect(url_for('reset_password_otp'))
 
-        user = User.query.filter_by(email=email).first()
-        if user:
-            user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-            db.session.commit()
-            flash('Your password has been updated! You can now log in.', 'success')
-            return redirect(url_for('login'))
+        user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.reset_otp = None
+        user.reset_otp_expires_at = None
+        db.session.commit()
+        
+        session.pop('reset_phone', None)
+        
+        flash('Your password has been updated! You can now log in.', 'success')
+        return redirect(url_for('login'))
     
     return render_template('reset_password.html')
 
@@ -582,6 +679,20 @@ def ai_chat():
 
 def generate_ai_response(user_message, books, categories):
     """Generate AI responses using Google Gemini"""
+    message_lower = user_message.lower().strip()
+
+    # handle simple local book queries without calling Gemini
+    if any(word in message_lower for word in ['how many books', 'total books', 'book count', 'books do i have']):
+        return f"You have {len(books)} books in your collection across {len(categories)} categories."
+
+    if any(word in message_lower for word in ['my books', 'what books', 'list books', 'show books']):
+        if not books:
+            return "You don't have any books yet. Start by adding some books to your collection!"
+        return "Here are the books in your library:\n" + "\n".join([f"- {book.title} by {book.author}" for book in books])
+
+    if not is_gemini_api_configured() or client is None:
+        return "The AI assistant is not configured yet. Please ask your administrator to set GEMINI_API_KEY in the environment."
+
     try:
         # Build context from user's library
         context = "The user has the following books in their library:\n"
@@ -606,9 +717,6 @@ def generate_ai_response(user_message, books, categories):
     except Exception as e:
         print(f"Gemini Chat Error: {str(e)}")
         return "I'm having trouble connecting to my brain right now. Please try again later!"
-    # Books collection queries
-    if any(word in message_lower for word in ['how many books', 'total books', 'book count', 'books do i have']):
-        return f"You have {len(books)} books in your collection across {len(categories)} categories."
     
     if any(word in message_lower for word in ['my books', 'what books', 'list books', 'show books']):
         if not books:
@@ -834,7 +942,9 @@ def book_file(book_id):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], book.file_path)
     if not os.path.exists(file_path):
         abort(404)
-    return send_file(file_path, mimetype='application/pdf', as_attachment=False)
+    if is_pdf_file(book.file_path):
+        return send_file(file_path, mimetype='application/pdf', as_attachment=False)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], book.file_path)
 
 @app.route('/read_book/<int:book_id>')
 @login_required
@@ -843,12 +953,20 @@ def read_book(book_id):
     if not book_access_allowed(book, current_user):
         return redirect(url_for('dashboard'))
 
+    is_pdf = is_pdf_file(book.file_path)
+    page_count = get_pdf_page_count(book)
+
     if current_user.is_admin or (book.user_id == current_user.id and not book.is_global):
         progress_target = book
         progress_view = book
     else:
         progress_target = get_or_create_book_progress(current_user.id, book.id)
         progress_view = book_progress_view(book, progress_target)
+
+    if page_count and page_count > 1 and (not progress_target.current_page or progress_target.current_page < 1):
+        progress_target.current_page = 1
+    if page_count and page_count > 1 and progress_target.current_page > page_count:
+        progress_target.current_page = page_count
 
     was_unread = normalize_reading_status(progress_target.status) == 'unread'
     if was_unread:
@@ -862,7 +980,7 @@ def read_book(book_id):
     if progress_view is not book:
         progress_view = book_progress_view(book, progress_target)
 
-    return render_template('read_book.html', book=progress_view)
+    return render_template('read_book.html', book=progress_view, page_count=page_count, is_pdf=is_pdf)
 
 @app.route('/update_progress/<int:book_id>', methods=['POST'])
 @login_required
@@ -875,6 +993,8 @@ def update_progress(book_id):
     if 'status' in data and data['status'] not in READING_STATUSES:
         return jsonify({'error': 'Invalid reading status'}), 400
 
+    page_count = get_pdf_page_count(book)
+
     if current_user.is_admin or (book.user_id == current_user.id and not book.is_global):
         progress_target = book
     else:
@@ -882,15 +1002,24 @@ def update_progress(book_id):
 
     prev_status = normalize_reading_status(progress_target.status)
     if 'current_page' in data:
-        progress_target.current_page = data['current_page']
+        try:
+            page = int(data['current_page'])
+        except (ValueError, TypeError):
+            page = progress_target.current_page or 1
+        if page_count and page_count > 1:
+            page = max(1, min(page, page_count))
+        progress_target.current_page = page
+        if page_count and page_count > 1 and page >= page_count:
+            data['status'] = 'finished'
     if 'status' in data:
         progress_target.status = data['status']
-        if progress_target.status in ['reading', 'finished']:
-            progress_target.last_read_at = datetime.utcnow()
-        
+    if progress_target.status in ['reading', 'finished']:
+        progress_target.last_read_at = datetime.utcnow()
+
     db.session.commit()
 
-    if data.get('status') == 'finished' and prev_status != 'finished':
+    final_status = normalize_reading_status(progress_target.status)
+    if final_status == 'finished' and prev_status != 'finished':
         log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')
 
     return jsonify({
@@ -1034,35 +1163,57 @@ def admin_evaluations():
     evaluations = Evaluation.query.order_by(Evaluation.created_at.desc()).all()
     return render_template('admin_evaluations.html', evaluations=evaluations)
 
-def generate_questions_from_text(text):
+def extract_json_array(text):
+    # Try to extract the first JSON array from a response string.
+    import re
+    match = re.search(r'```json\s*(\[.*?\])\s*```', text, re.S)
+    if not match:
+        match = re.search(r'(\[\s*\{.*?\}\s*\])', text, re.S)
+    if match:
+        return match.group(1)
+    return text
+
+
+def generate_questions_from_text(text, num_questions=10):
     """
     Generate questions using Google Gemini AI.
     """
     try:
         prompt = f"""
-        Analyze the following educational notes and generate 30 multiple-choice questions.
-        For each question, provide 4 options (a, b, c, d) and indicate the correct answer.
-        Format the output as a JSON list of objects, each with:
-        "question_text", "options" (list of 4 strings), and "correct_answer" (string 'a', 'b', 'c', or 'd').
-        
-        Notes:
-        {text[:60000000000]}  # Limit text to stay within tokens
-        """
-        
+You are a strict exam generator.
+Use ONLY the educational notes shown below. Do NOT use any outside information.
+Generate exactly {num_questions} multiple-choice questions.
+Each question must include 4 answer options labeled a, b, c, d.
+Return only a JSON array of objects in this exact format:
+[
+  {{
+    "question_text": "...",
+    "options": ["...", "...", "...", "..."],
+    "correct_answer": "a"
+  }},
+  ...
+]
+
+Notes:
+{text[:60000000000]}
+"""
         response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=prompt
         )
-        # Extract JSON from response (handling potential markdown formatting)
         response_text = response.text
         if "```json" in response_text:
             response_text = response_text.split("```json")[1].split("```")[0]
         elif "```" in response_text:
             response_text = response_text.split("```")[1].split("```")[0]
-            
+
+        response_text = extract_json_array(response_text)
+
         import json
         questions_data = json.loads(response_text)
-        
+        if len(questions_data) > num_questions:
+            questions_data = questions_data[:num_questions]
+
         generated_questions = []
         for q in questions_data:
             generated_questions.append({
@@ -1070,17 +1221,41 @@ def generate_questions_from_text(text):
                 'options': q['options'],
                 'correct_answer': q['correct_answer']
             })
+
+        if len(generated_questions) < num_questions:
+            sentences = re.split(r'[.!?]\s+', text)
+            for i in range(num_questions - len(generated_questions)):
+                fallback_index = min(i, len(sentences) - 1)
+                generated_questions.append({
+                    'question_text': f"Based on the notes, what does this sentence describe: '{sentences[fallback_index][:60]}...' ?",
+                    'options': [
+                        "Correct answer",
+                        "Alternative answer 1",
+                        "Alternative answer 2",
+                        "Alternative answer 3"
+                    ],
+                    'correct_answer': 'a'
+                })
+
         return generated_questions
-        
+
     except Exception as e:
         print(f"Gemini API Error: {str(e)}")
-        # Fallback to a very simple heuristic if API fails
         sentences = re.split(r'[.!?]\s+', text)
-        return [{
-            'question_text': f"Based on the notes, define a key concept mentioned in: '{sentences[0][:50]}...'",
-            'options': ["Correct Definition", "Wrong Option 1", "Wrong Option 2", "Wrong Option 3"],
-            'correct_answer': 'a'
-        }]
+        fallback = []
+        for i in range(num_questions):
+            fallback_index = min(i, len(sentences) - 1)
+            fallback.append({
+                'question_text': f"Based on the notes, what does this sentence describe: '{sentences[fallback_index][:60]}...' ?",
+                'options': [
+                    "Correct answer",
+                    "Alternative answer 1",
+                    "Alternative answer 2",
+                    "Alternative answer 3"
+                ],
+                'correct_answer': 'a'
+            })
+        return fallback
 
 @app.route('/admin/evaluations/create', methods=['GET', 'POST'])
 @login_required
@@ -1101,6 +1276,8 @@ def create_evaluation():
         # Handle PDF Upload
         source_file = None
         pdf_file = request.files.get('notes_pdf')
+        num_questions = int(request.form.get('num_questions', 10)) if request.form.get('num_questions') else 10
+        num_questions = max(1, min(num_questions, 100))
         generated_questions = []
         
         if pdf_file and pdf_file.filename.endswith('.pdf'):
@@ -1117,7 +1294,7 @@ def create_evaluation():
                     text += page.extract_text() + "\n"
                 
                 if text.strip():
-                    generated_questions = generate_questions_from_text(text)
+                    generated_questions = generate_questions_from_text(text, num_questions=num_questions)
             except Exception as e:
                 flash(f'Error processing PDF: {str(e)}', 'warning')
         
@@ -1204,6 +1381,8 @@ def generate_ai_questions(eval_id):
     notes_text = request.form.get('ai_notes')
     pdf_file = request.files.get('ai_pdf')
     use_original = request.form.get('use_original') == 'true'
+    num_questions = int(request.form.get('num_questions', 10)) if request.form.get('num_questions') else 10
+    num_questions = max(1, min(num_questions, 100))
     
     text_to_process = ""
     if use_original and evaluation.source_file:
@@ -1226,7 +1405,7 @@ def generate_ai_questions(eval_id):
     
     if text_to_process:
         try:
-            generated_questions = generate_questions_from_text(text_to_process)
+            generated_questions = generate_questions_from_text(text_to_process, num_questions=num_questions)
             if generated_questions:
                 current_count = Question.query.filter_by(evaluation_id=eval_id).count()
                 for i, q_data in enumerate(generated_questions, 1):
@@ -2831,5 +3010,7 @@ def system_logs():
     return render_template('admin_system_logs.html', logs=logs)
 
 if __name__ == '__main__':
+    import os
     ensure_db_schema()
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='127.0.0.1', port=5000, debug=debug_mode)

@@ -53,6 +53,12 @@
                     <small class="text-muted">If uploaded, we can generate questions based on these notes.</small>
                 </div>
 
+                <div class="form-group mb-4">
+                    <label for="num_questions">Number of AI questions to generate</label>
+                    <input type="number" class="form-control" id="num_questions" name="num_questions" value="10" min="1" max="100" style="padding: 1rem; width: 120px;">
+                    <small class="text-muted">The AI will generate exactly this many MCQs from the uploaded notes.</small>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="form-group">
                         <label for="total_marks">Total Marks</label>

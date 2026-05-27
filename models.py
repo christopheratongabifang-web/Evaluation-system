@@ -12,6 +12,9 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     is_muted = db.Column(db.Boolean, default=False, nullable=False)
     gender = db.Column(db.String(20), nullable=True)  # Male, Female, Other, Prefer not to say
+    phone_number = db.Column(db.String(20), unique=True, nullable=True)
+    reset_otp = db.Column(db.String(6), nullable=True)
+    reset_otp_expires_at = db.Column(db.DateTime, nullable=True)
     books = db.relationship('Book', backref='owner', lazy=True)
     categories = db.relationship('Category', backref='owner', lazy=True)
     notifications = db.relationship('Notification', backref='recipient', lazy=True)

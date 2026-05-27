@@ -45,7 +45,7 @@
 
         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
             {% if book.status != 'finished' %}
-            <button id="mark-finished" class="btn btn-success" style="padding: 0.6rem 1.4rem; font-weight: 700; border-radius: 0.75rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+            <button id="mark-finished" type="button" class="btn btn-success" style="padding: 0.6rem 1.4rem; font-weight: 700; border-radius: 0.75rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
                 <i class="fa-solid fa-circle-check me-2"></i>Mark as Complete
             </button>
             {% else %}
@@ -60,28 +60,61 @@
     </div>
 </div>
 
-<!-- Reading Progress Bar (visible when in progress) -->
-{% if book.status == 'reading' %}
-<div class="glass" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; align-items: center; gap: 1.5rem;">
-    <div style="flex:1;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-            <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Reading in Progress</span>
-            <span style="font-size:0.8rem; color:var(--warning); font-weight:700;">Keep going!</span>
+<!-- Reading Progress Panel -->
+<div class="glass" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; align-items:center;">
+        <div>
+            <div style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:0.35rem;">
+                Page <span id="current-page-label">{{ book.current_page or 1 }}</span>{% if page_count %} of <span id="total-pages-label">{{ page_count }}</span>{% endif %}
+                {% if page_count %}<span id="current-percent-label">· {{ ((book.current_page or 1) / page_count * 100)|round(0) }}% complete</span>{% else %}<span id="current-percent-label"></span>{% endif %}
+            </div>
+            <div style="font-size:1rem; color: var(--text-primary); font-weight:700;">
+                {% if book.status == 'finished' %}Finished reading — great job!{% else %}Continue from where you left off{% endif %}
+            </div>
         </div>
-        <div style="height:6px; background:var(--surface-border); border-radius:3px; overflow:hidden;">
-            <div style="height:100%; width:50%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius:3px; animation: pulse 2s infinite;"></div>
+        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <label for="page-number" style="font-weight:700; color:var(--text-secondary);">Go to page</label>
+            <input id="page-number" type="number" min="1" max="{{ page_count if page_count and page_count > 1 else 9999 }}" value="{{ book.current_page or 1 }}" style="width:6rem; padding:0.6rem 0.85rem; border-radius:0.75rem; border:1px solid var(--surface-border); background:var(--input-bg); color:var(--input-text);">
+            {% if book.status != 'finished' %}
+            <button id="go-page" type="button" class="btn btn-secondary" style="padding:0.6rem 1.4rem; font-weight:700; border-radius:0.75rem; background: #64748b; color: #ffffff; border:none;">
+                <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Go
+            </button>
+            <button id="save-progress" type="button" class="btn btn-primary" style="padding:0.6rem 1.4rem; font-weight:700; border-radius:0.75rem;">
+                <i class="fa-solid fa-floppy-disk me-2"></i>Save progress
+            </button>
+            {% endif %}
         </div>
     </div>
-    <i class="fa-solid fa-book-open-reader" style="font-size:1.5rem; color:var(--warning);"></i>
+    {% if book.status != 'finished' %}
+    <div style="display:flex; justify-content:space-between; gap:1rem; align-items:center; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px;">
+            <div style="height:6px; background:var(--surface-border); border-radius:3px; overflow:hidden;">
+                <div id="progress-fill" style="height:100%; width: {{ page_count and ((book.current_page or 1) / page_count * 100)|round(0) or 0 }}%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius:3px;"></div>
+            </div>
+        </div>
+        <div style="color: var(--text-secondary); font-size:0.9rem; white-space:nowrap;">
+            {% if page_count %}{{ ((book.current_page or 1) / page_count * 100)|round(0) }}% done{% else %}Progress will be saved automatically.{% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 
+{% if is_pdf %}
 <!-- PDF Viewer -->
 <div class="reader-container" style="margin-bottom: 2rem; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-    <iframe id="pdf-iframe" src="{{ url_for('book_file', book_id=book.id) }}"
+    <iframe id="pdf-iframe" src="{{ url_for('book_file', book_id=book.id) }}{% if book.current_page %}#page={{ book.current_page }}{% endif %}"
             style="width:100%; height:88vh; border:none; background: #1e293b; display:block;">
     </iframe>
 </div>
+{% else %}
+<div class="reader-container" style="margin-bottom: 2rem; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 1px solid var(--surface-border); background: var(--surface); padding: 2rem; display: flex; align-items: center; justify-content: center; text-align: center;">
+    <div style="max-width: 520px;">
+        <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">This book cannot be displayed in a PDF viewer.</div>
+        <div style="color: var(--text-secondary); margin-bottom: 1.25rem;">The uploaded file is not a PDF. You may download or open it using your device's native viewer.</div>
+        <a href="{{ url_for('book_file', book_id=book.id) }}" class="btn btn-primary" style="padding: 0.75rem 1.4rem; border-radius: 0.75rem; font-weight: 700;">Open or Download File</a>
+    </div>
+</div>
+{% endif %}
 
 <style>
 @keyframes slideUp {
@@ -95,39 +128,210 @@
 </style>
 
 <script>
-    const bookId   = {{ book.id }};
-    const currentStatus = "{{ book.status }}";
+    document.addEventListener('DOMContentLoaded', function () {
+        const bookId = {{ book.id }};
+        const currentStatus = "{{ book.status }}";
+        const pageCount = {{ page_count if page_count is not none else 'null' }};
+        const pageInput = document.getElementById('page-number');
+        const saveButton = document.getElementById('save-progress');
+        const markFinishedButton = document.getElementById('mark-finished');
+        const toast = document.getElementById('completion-toast');
+        const badge = document.getElementById('status-badge');
+        const progressFill = document.getElementById('progress-fill');
+        const pageLabel = document.getElementById('current-page-label');
+        const percentLabel = document.getElementById('current-percent-label');
+        const jumpButton = document.getElementById('go-page');
+        const iframe = document.getElementById('pdf-iframe');
 
-    function saveProgress(page, status) {
-        return fetch("{{ url_for('update_progress', book_id=book.id) }}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ current_page: page, status: status })
-        }).then(r => r.json());
-    }
+        function formatStatusLabel(status) {
+            if (status === 'finished') {
+                return '<i class="fa-solid fa-circle-check"></i> Completed';
+            }
+            if (status === 'reading') {
+                return '<i class="fa-solid fa-book-open"></i> Reading';
+            }
+            return '<i class="fa-solid fa-book"></i> Unread';
+        }
 
-    {% if book.status != 'finished' %}
-    document.getElementById('mark-finished').addEventListener('click', function () {
-        this.disabled = true;
-        this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving...';
-        saveProgress(1, 'finished').then(() => {
-            // Show toast
-            const toast = document.getElementById('completion-toast');
+        function saveProgress(page, status) {
+            return fetch("{{ url_for('update_progress', book_id=book.id) }}", {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ current_page: page, status: status })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            });
+        }
+
+        function showCompletionToast() {
+            if (!toast) return;
             toast.style.display = 'flex';
-            // Update badge
-            const badge = document.getElementById('status-badge');
-            badge.style.background = 'rgba(16,185,129,0.15)';
-            badge.style.color = '#10b981';
-            badge.style.border = '1px solid rgba(16,185,129,0.3)';
-            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Completed';
-            // Swap button to completed state
-            this.outerHTML = '<div style="padding: 0.6rem 1.4rem; border-radius: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; font-weight: 700; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-circle-check me-2"></i>Completed ✓</div>';
-            // Remove progress bar if visible
-            const progressBar = document.querySelector('.reader-container')?.previousElementSibling;
-            // Hide toast after 4s
             setTimeout(() => { toast.style.display = 'none'; }, 4500);
-        });
+        }
+
+        function updatePageLabels(page) {
+            if (pageLabel) {
+                pageLabel.textContent = page;
+            }
+            if (percentLabel) {
+                if (pageCount) {
+                    const percent = Math.round(Math.min(100, Math.max(0, (page / pageCount) * 100)));
+                    percentLabel.textContent = `· ${percent}% complete`;
+                } else {
+                    percentLabel.textContent = '';
+                }
+            }
+        }
+
+        function updateProgressUI(page, notify = false, finished = false) {
+            if (pageInput) {
+                pageInput.value = page;
+            }
+            updatePageLabels(page);
+            if (progressFill) {
+                if (pageCount) {
+                    const percent = Math.round(Math.min(100, Math.max(0, (page / pageCount) * 100)));
+                    progressFill.style.width = `${percent}%`;
+                } else if (finished) {
+                    progressFill.style.width = '100%';
+                }
+            }
+            if (finished && badge) {
+                badge.style.background = 'rgba(16,185,129,0.15)';
+                badge.style.color = '#10b981';
+                badge.style.border = '1px solid rgba(16,185,129,0.3)';
+                badge.innerHTML = formatStatusLabel('finished');
+                if (notify) {
+                    showCompletionToast();
+                }
+            }
+        }
+
+        function syncPageFromIframe() {
+            if (!iframe || !pageInput || !pageCount || pageCount <= 1) return;
+            try {
+                const hash = iframe.contentWindow.location.hash || '';
+                if (hash.startsWith('#page=')) {
+                    const page = parseInt(hash.replace('#page=', ''), 10);
+                    if (!Number.isNaN(page) && page !== parseInt(pageInput.value, 10)) {
+                        pageInput.value = page;
+                        updateProgressUI(page);
+                    }
+                }
+            } catch (error) {
+                // Browser PDF viewers may block direct access; ignore silently.
+            }
+        }
+
+        function getDesiredPage() {
+            if (!pageInput) return 1;
+            const value = parseInt(pageInput.value, 10);
+            if (Number.isNaN(value) || value < 1) return 1;
+            if (pageCount && pageCount > 1) return Math.min(value, pageCount);
+            return value;
+        }
+
+        function syncIframePage(page) {
+            if (!iframe) return;
+            const base = "{{ url_for('book_file', book_id=book.id) }}";
+            iframe.src = `${base}#page=${page}`;
+        }
+
+        function persistProgress(page, explicitStatus = null) {
+            const status = explicitStatus || (pageCount && page >= pageCount ? 'finished' : 'reading');
+            return saveProgress(page, status).then(response => {
+                if (!response.success) {
+                    console.error('Progress save failed', response);
+                    alert('Unable to save your reading progress. Please try again.');
+                    return response;
+                }
+                const savedPage = response.current_page || page;
+                const finished = response.status === 'finished' || status === 'finished';
+                if (finished) {
+                    showCompletionToast();
+                }
+                if (finished && badge) {
+                    badge.style.background = 'rgba(16,185,129,0.15)';
+                    badge.style.color = '#10b981';
+                    badge.style.border = '1px solid rgba(16,185,129,0.3)';
+                    badge.innerHTML = formatStatusLabel('finished');
+                }
+                updateProgressUI(savedPage, false, finished);
+                return response;
+            }).catch(error => {
+                console.error('Could not save progress', error);
+                alert('Unable to save your reading progress. Please try again.');
+                return { success: false, error: error.message || 'Unknown error' };
+            });
+        }
+
+        if (jumpButton) {
+            jumpButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const page = getDesiredPage();
+                this.disabled = true;
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Going...';
+                syncIframePage(page);
+                persistProgress(page).finally(() => {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Go';
+                });
+            });
+        }
+
+        if (saveButton) {
+            saveButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const page = getDesiredPage();
+                this.disabled = true;
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving...';
+                syncIframePage(page);
+                persistProgress(page).finally(() => {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Save progress';
+                });
+            });
+        }
+
+        if (markFinishedButton) {
+            markFinishedButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const page = getDesiredPage();
+                this.disabled = true;
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Completing...';
+                syncIframePage(page);
+                persistProgress(page, 'finished').finally(() => {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Mark as Complete';
+                });
+            });
+        }
+
+        if (pageInput) {
+            pageInput.addEventListener('change', function () {
+                const page = getDesiredPage();
+                updateProgressUI(page);
+            });
+            pageInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (saveButton) {
+                        saveButton.click();
+                    }
+                }
+            });
+        }
+
+        if (pageCount && pageCount > 1) {
+            updateProgressUI({{ book.current_page or 1 }}, false);
+            setInterval(syncPageFromIframe, 1500);
+        } else {
+            updateProgressUI({{ book.current_page or 1 }}, false);
+        }
     });
-    {% endif %}
 </script>
 {% endblock %}
