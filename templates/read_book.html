@@ -2,17 +2,7 @@
 
 {% block content %}
 
-<!-- Toast notification -->
-<div id="completion-toast" style="display:none; position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
-     background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 1.25rem 1.75rem;
-     border-radius: 1rem; box-shadow: 0 20px 40px rgba(16,185,129,0.4); animation: slideUp 0.4s ease;
-     display: flex; align-items: center; gap: 1rem; max-width: 380px;">
-    <i class="fa-solid fa-circle-check" style="font-size: 1.75rem;"></i>
-    <div>
-        <div style="font-weight: 700; font-size: 1rem;">Reading Complete! 🎉</div>
-        <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem;">This book has been marked as finished.</div>
-    </div>
-</div>
+
 
 <!-- Header Bar -->
 <div class="glass" style="padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary); border-radius: 1rem;">
@@ -167,11 +157,7 @@
             });
         }
 
-        function showCompletionToast() {
-            if (!toast) return;
-            toast.style.display = 'flex';
-            setTimeout(() => { toast.style.display = 'none'; }, 4500);
-        }
+function showCompletionToast(){ /* disabled */ }
 
         function updatePageLabels(page) {
             if (pageLabel) {
@@ -206,7 +192,7 @@
                 badge.style.border = '1px solid rgba(16,185,129,0.3)';
                 badge.innerHTML = formatStatusLabel('finished');
                 if (notify) {
-                    showCompletionToast();
+                    /* showCompletionToast(); */
                 }
             }
         }
@@ -252,7 +238,7 @@
                 const savedPage = response.current_page || page;
                 const finished = response.status === 'finished' || status === 'finished';
                 if (finished) {
-                    showCompletionToast();
+                    /* showCompletionToast(); */
                 }
                 if (finished && badge) {
                     badge.style.background = 'rgba(16,185,129,0.15)';

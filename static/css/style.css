@@ -1,115 +1,81 @@
-.dashboard-section, .dashboard-hub, .dashboard-section *, .dashboard-hub *, .hero-mesh, .hero-mesh * {
-    color: #1A2C3E !important;
-    font-weight: 700 !important;
-    text-shadow: none !important;
-    opacity: 1 !important;
-}
 
-.hero-mesh h1, .hero-mesh h2, .hero-mesh h3, .hero-mesh p {
-    color: #1A2C3E !important;
-    font-weight: 800 !important;
-    opacity: 1 !important;
-    text-shadow: none !important;
-}
-/* Force dashboard text to be highly visible on warm backgrounds */
-.dashboard-section, .dashboard-hub, .dashboard-section *, .dashboard-hub * {
-    color: #1A2C3E !important;
-}
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-light: rgba(99, 102, 241, 0.10);
-    --accent-pink: #db2777;
-    --accent-cyan: #0891b2;
-    --warning: #d97706;
-    --danger: #dc2626;
-    --success: #059669;
-    --background: #EFF3F8;
-    --surface: rgba(255, 255, 255, 0.92);
-    --surface-solid: #ffffff;
-    --surface-border: rgba(99, 102, 241, 0.15);
-    --text-primary: #1A2C3E;
-    --text-secondary: #4b5580;
-    --sidebar-bg: #ffffff;
-    --navbar-bg: rgba(255, 255, 255, 0.85);
-    --input-bg: #ffffff;
-    --input-text: #1A2C3E;
-    --option-bg: #ffffff;
-    --option-text: #1A2C3E;
-}
-
-/* Dark theme override */
-[data-theme="dark"] {
-    --primary: #818cf8;
-    --background: #FDF7F0;
-    --primary-light: rgba(99, 102, 241, 0.15);
-    --accent-pink: #ec4899;
+    --primary: #8b5cf6; /* Vibrant Purple */
+    --primary-hover: #7c3aed;
+    --primary-light: rgba(139, 92, 246, 0.15);
+    --accent-pink: #f43f5e;
     --accent-cyan: #06b6d4;
     --warning: #f59e0b;
     --danger: #ef4444;
     --success: #10b981;
-    --background: #080c1a;
-    --surface: rgba(18, 24, 48, 0.75);
-    --surface-solid: #12182f;
-    --surface-border: rgba(99, 102, 241, 0.18);
-    --text-primary: #eef0ff;
-    --text-secondary: #8892b0;
-    --sidebar-bg: rgba(8, 12, 26, 0.97);
-    --navbar-bg: rgba(8, 12, 26, 0.88);
-    --input-bg: rgba(8, 12, 26, 0.8);
-    background: #FDF7F0;
-    --option-bg: #0d1225;
-    --option-text: #eef0ff;
+    --background: #0f172a;
+    --surface: rgba(30, 41, 59, 0.7);
+    --surface-solid: #1e293b;
+    --surface-border: rgba(139, 92, 246, 0.25);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --sidebar-bg: rgba(15, 23, 42, 0.95);
+    --navbar-bg: rgba(15, 23, 42, 0.85);
+    --input-bg: rgba(30, 41, 59, 0.8);
+    --input-text: #f8fafc;
+    --option-bg: #1e293b;
+    --option-text: #f8fafc;
 }
 
-/* Light theme explicit (same as :root default) */
+[data-theme="dark"] {
+    --primary: #a855f7;
+    --background: #020617;
+    --surface: rgba(15, 23, 42, 0.8);
+    --surface-solid: #0f172a;
+    --surface-border: rgba(168, 85, 247, 0.25);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+}
+
 [data-theme="light"] {
     --primary: #6366f1;
     --primary-hover: #4f46e5;
-    --primary-light: rgba(99, 102, 241, 0.08);
-    --accent-pink: #db2777;
-    --accent-cyan: #0891b2;
-    --warning: #d97706;
-    --danger: #dc2626;
-    background: #FDF7F0;
-    --background: #EFF3F8;
-    --surface: rgba(255, 255, 255, 0.95);
+    --background: #f1f5f9;
+    --surface: rgba(255, 255, 255, 0.85);
     --surface-solid: #ffffff;
-    --surface-border: rgba(99, 102, 241, 0.15);
-    --text-primary: #1A2C3E;
-    --text-secondary: #4b5580;
-    --sidebar-bg: #ffffff;
-    --navbar-bg: rgba(255, 255, 255, 0.88);
-    background: #FDF7F0 !important;
-    --input-text: #1A2C3E;
+    --surface-border: rgba(99, 102, 241, 0.2);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
     --option-bg: #ffffff;
-    --option-text: #1A2C3E;
+    --option-text: #0f172a;
+}
+
+@keyframes modernDrift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background: #EFF3F8;
-    background-image: none;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    background: var(--background);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.12), transparent 35%),
+        radial-gradient(circle at 85% 30%, rgba(244, 63, 94, 0.12), transparent 35%);
+    background-size: 200% 200%;
+    animation: modernDrift 15s ease-in-out infinite;
     background-attachment: fixed;
-    background-repeat: no-repeat;
-    background: #FDF7F0;
-    color: #1A2C3E;
+    color: var(--text-primary);
     min-height: 100vh;
     margin: 0;
     display: flex;
     flex-direction: column;
-    transition: background 0.4s ease, color 0.4s ease;
+    transition: background 0.5s ease, color 0.5s ease;
 }
-    background: #FDF7F0;
+
 [data-theme="light"] body {
-    background: #EFF3F8;
-    background-image: none;
-    background: #FDF7F0;
-    background-repeat: no-repeat;
-    background-size: cover;
-    color: #1A2C3E;
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 35%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 35%);
 }
 
 /* Glassmorphism utility */
@@ -1258,79 +1224,39 @@ h1, h2, h3 {
 
 /* Animated Mesh Gradient Background for Hero */
 .hero-mesh {
-    background: #EFF3F8 !important;
-    background-image: none !important;
+    background: var(--surface) !important;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15), transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(244, 63, 94, 0.15), transparent 50%) !important;
     background-size: 200% 200%;
     animation: meshGradient 10s ease infinite;
     position: relative;
     overflow: hidden;
     border-radius: 1.25rem;
     padding: 3rem 2rem;
-    box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="light"] .hero-mesh {
-    background: #EFF3F8;
-    background-image: none;
-    background-size: 200% 200%;
-    animation: meshGradient 10s ease infinite;
-    box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.2);
+    background: var(--surface) !important;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1), transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(236, 72, 153, 0.1), transparent 50%) !important;
+    box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
 }
 
-/* Global black text for quick visibility */
-/* Premium dark gradient background */
-body {
-    background: linear-gradient(135deg, #09090b 0%, #111827 100%);
-    background-attachment: fixed;
-    background-size: cover;
-    color: var(--text-primary);
+.hero-mesh h1 {
+    font-weight: 900 !important;
+    color: var(--text-primary) !important;
+}
+
+.hero-mesh p {
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    opacity: 0.9;
 }
 
 
-.navbar,
-.glass,
-.card,
-.stat-box,
-.auth-container,
-.sidebar,
-.sidebar-user-card,
-.hero-mesh,
-.feature-icon,
-input,
-select,
-textarea,
-.form-control,
-.form-select,
-button,
-.btn,
-.btn-primary,
-.btn-secondary,
-.btn-outline {
-    background: #ffffff !important;
-    border-color: #d1d5db !important;
-}
-
-input,
-select,
-textarea,
-.form-control,
-.form-select,
-button,
-.btn,
-.btn-primary,
-.btn-secondary,
-.btn-outline {
-    color: #000000 !important;
-}
-
-a,
-.nav-links a,
-.navbar-brand,
-.sidebar-brand,
-.sidebar-nav-item,
-.sidebar-nav-item.active {
-    color: #000000 !important;
-}
 
 @keyframes meshGradient {
     0% { background-position: 0% 50%; }
@@ -1519,15 +1445,18 @@ a,
     border-color: var(--primary);
 }
 
-.checkmark:after {
-    content: "";
-    display: none;
-    width: 4px;
-    height: 9px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-    margin-bottom: 2px;
+.bottom-center-accreditation {
+    position: fixed;
+    left: 50%;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    z-index: 9999;
+    text-align: center;
+    width: 100%;
+    pointer-events: none; /* allow clicks through if needed */
+}
+.bottom-center-accreditation a {
+    pointer-events: auto; /* enable link click */
 }
 
 .custom-checkbox input:checked ~ .checkmark:after {

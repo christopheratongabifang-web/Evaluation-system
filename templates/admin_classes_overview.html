@@ -37,43 +37,48 @@
     </div>
 
     <div class="row g-4 mt-2">
+        {% set theme_colors = ['#8b5cf6', '#ec4899', '#06b6d4', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#84cc16'] %}
         {% for class_name, info in class_counts.items() %}
+        {% set color = theme_colors[loop.index0 % theme_colors|length] %}
         {% set count = info.count %}
         {% set class_id = info.id %}
         {% set course_name = info.course_name %}
         {% set level = info.level %}
         <div class="col-md-6 col-lg-3">
-            <div class="glass h-100 p-4 d-flex flex-column justify-content-between" style="border-radius: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; border-left: 5px solid {% if count > 0 %}var(--success){% else %}var(--warning){% endif %};">
-                <div>
+            <div class="glass h-100 p-4 d-flex flex-column justify-content-between" style="border-radius: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; border-left: 5px solid {{ color }}; background: linear-gradient(135deg, var(--surface) 0%, {{ color }}15 100%); position: relative; overflow: hidden;">
+                <!-- Decorative colored circle behind the text -->
+                <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%; background: {{ color }}; opacity: 0.1; z-index: 0; pointer-events: none;"></div>
+                
+                <div style="position: relative; z-index: 1;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge {% if count > 0 %}bg-success{% else %}bg-secondary{% endif %} p-2 px-3" style="font-size: 0.85rem;">
+                        <span class="badge p-2 px-3" style="font-size: 0.85rem; background: {{ color }}22; color: {{ color }}; border: 1px solid {{ color }}44;">
                             {% if count > 0 %}<i class="fas fa-user-check me-1"></i> Active{% else %}No Students{% endif %}
                         </span>
                         {% if class_id %}
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary px-2 py-1" style="font-size: 0.8rem;">{{ level }}</span>
+                            <span class="badge px-2 py-1" style="font-size: 0.8rem; background: {{ color }}; color: #fff;">{{ level }}</span>
                             <form action="{{ url_for('delete_academic_class', class_id=class_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete {{ class_name }}? Enrolled students will be moved to Unassigned.');" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1" title="Delete Course" style="border-radius: 0.5rem;">
+                                <button type="submit" class="btn btn-sm px-2 py-1" title="Delete Course" style="border-radius: 0.5rem; color: #ef4444; border: 1px solid #ef4444; background: transparent;">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </form>
                         </div>
                         {% else %}
-                        <i class="fas fa-graduation-cap fa-2x" style="color: rgba(255,255,255,0.2);"></i>
+                        <i class="fas fa-graduation-cap fa-2x" style="color: {{ color }}44;"></i>
                         {% endif %}
                     </div>
                     
                     <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">{{ course_name }}</h3>
                     {% if class_id %}
-                    <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Level / Year: <strong class="text-white">{{ level }}</strong></div>
+                    <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Level / Year: <strong style="color: var(--text-primary);">{{ level }}</strong></div>
                     {% endif %}
-                    <div style="font-size: 2.25rem; font-weight: 800; color: {% if count > 0 %}var(--primary){% else %}var(--text-secondary){% endif %}; margin: 1rem 0;">
+                    <div style="font-size: 2.25rem; font-weight: 800; color: {{ color }}; margin: 1rem 0;">
                         {{ count }} <span style="font-size: 1rem; font-weight: 500; color: var(--text-secondary);">Students</span>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-                    <a href="{{ url_for('admin_class_detail', class_name=class_name) }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" style="padding: 0.75rem; border-radius: 0.75rem; font-weight: 600;">
+                <div class="mt-4 pt-3 border-top" style="position: relative; z-index: 1; border-color: rgba(255,255,255,0.1) !important;">
+                    <a href="{{ url_for('admin_class_detail', class_name=class_name) }}" class="btn w-100 d-flex align-items-center justify-content-center gap-2" style="padding: 0.75rem; border-radius: 0.75rem; font-weight: 600; background: {{ color }}; color: #ffffff; border: none; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">
                         Manage Roster <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>

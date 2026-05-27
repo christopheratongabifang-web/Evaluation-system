@@ -556,13 +556,8 @@ def login():
         password = request.form.get('password', '')
         remember = True if request.form.get('remember') else False
         
-        import re
-        EMAIL_REGEX = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
-        if not EMAIL_REGEX.match(email):
-            flash('Please provide a valid email address.', 'danger')
-            return redirect(url_for('login'))
-
-        user = User.query.filter_by(email=email).first()
+        # Allow login by either email or username
+        user = User.query.filter(or_(User.email == email, User.username == username)).first()
 
         locked_until = lockout_until.get(username)
         if locked_until:
@@ -1020,7 +1015,7 @@ def update_progress(book_id):
 
     final_status = normalize_reading_status(progress_target.status)
     if final_status == 'finished' and prev_status != 'finished':
-        log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')
+        # log_action('Completed Reading', f'Finished reading: "{book.title}" by {book.author}')  # Temporarily disabled per user request
 
     return jsonify({
         'success': True,
