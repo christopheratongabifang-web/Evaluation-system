@@ -85,7 +85,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgres
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
 app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY')
-app.config['PREFERRED_URL_SCHEME'] = 'https'
+app.config['PREFERRED_URL_SCHEME'] = 'http'
 
 # Configure Gemini client only when a real key is present.
 def is_gemini_api_configured():
