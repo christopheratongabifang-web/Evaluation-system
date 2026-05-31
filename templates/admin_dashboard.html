@@ -73,31 +73,36 @@
 <!-- Books Section -->
 <div id="books-section" class="dashboard-section">
     <div class="glass" style="padding: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
             <h2 style="margin: 0;">Shared Library</h2>
-            <a href="{{ url_for('add_book') }}" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i> Upload New
-            </a>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Upload New
+                </a>
+                <a href="{{ url_for('add_category') }}" class="btn btn-outline">
+                    <i class="fa-solid fa-tags"></i> Add Category
+                </a>
+            </div>
         </div>
         <div class="book-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
             {% for book in global_books %}
             <div class="book-card glass">
-                <span class="book-category" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">{{ book.category }}</span>
+                <span class="book-category" style="background: rgba(236, 232, 223, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">{{ book.category }}</span>
                 <h3 class="book-title">{{ book.title }}</h3>
                 <p class="book-author">by {{ book.author }}</p>
                 <div class="book-actions">
-                    <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-primary" title="Read">
-                        <i class="fa-solid fa-book-open"></i>
+                    <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-primary action-btn" title="Read" aria-label="Read {{ book.title }}">
+                        <i class="fa-solid fa-book-open"></i> Read
                     </a>
-                    <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline" title="Download">
-                        <i class="fa-solid fa-download"></i>
+                    <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline action-btn" title="Download" aria-label="Download {{ book.title }}">
+                        <i class="fa-solid fa-download"></i> Download
                     </a>
-                    <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline" title="Edit">
-                        <i class="fa-solid fa-pen"></i>
+                    <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline action-btn" title="Edit" aria-label="Edit {{ book.title }}">
+                        <i class="fa-solid fa-pen"></i> Edit
                     </a>
                     <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" style="display: inline;">
-                        <button type="submit" class="btn btn-danger" title="Delete">
-                            <i class="fa-solid fa-trash"></i>
+                        <button type="submit" class="btn btn-danger action-btn" title="Delete" aria-label="Delete {{ book.title }}" onclick="return confirm('Delete this book?')">
+                            <i class="fa-solid fa-trash"></i> Delete
                         </button>
                     </form>
                 </div>

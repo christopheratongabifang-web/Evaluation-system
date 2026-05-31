@@ -4,3 +4,4 @@ __pycache__/
 library.db
 uploads/
 .env
+instance/

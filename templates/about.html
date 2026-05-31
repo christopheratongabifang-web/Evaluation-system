@@ -3,6 +3,14 @@
 {% block content %}
 <div style="max-width: 900px; margin: 2rem auto;">
 
+    <!-- Brand Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="{{ url_for('home') }}">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="RUBRIC" style="height: 52px;">
+        </a>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Evaluation System</p>
+    </div>
+
     <!-- Back Button -->
     <div style="margin-bottom: 2rem;">
         <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--surface-border); background: var(--surface-light); color: var(--text-primary);">

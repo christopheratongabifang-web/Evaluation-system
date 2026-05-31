@@ -126,6 +126,13 @@ body {
     letter-spacing: -0.02em;
 }
 
+.brand-logo {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
 .nav-links {
     display: flex;
     align-items: center;
@@ -556,12 +563,70 @@ option, select option {
     display: flex;
     gap: 0.5rem;
     margin-top: auto;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .book-actions .btn {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     flex: 1;
+}
+
+.book-actions .icon-btn {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    flex: 0 0 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.book-actions .action-btn {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    min-width: 70px;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem;
+}
+
+.book-actions form {
+    flex: 1 1 auto;
+    margin: 0;
+    display: flex;
+    align-items: stretch;
+}
+
+.book-actions form .action-btn {
+    width: 100%;
+    padding: 0.5rem 0.75rem !important;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon > i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.input-with-icon .form-control,
+.input-with-icon .form-select,
+.input-with-icon input,
+.input-with-icon select {
+    padding-left: 2.75rem !important;
 }
 
 /* Alerts */

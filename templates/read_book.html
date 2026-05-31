@@ -119,9 +119,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const bookId = {{ book.id }};
-        const currentStatus = "{{ book.status }}";
-        const pageCount = {{ page_count if page_count is not none else 'null' }};
+        const bookId = {{ book.id|tojson }};
+        const currentStatus = {{ book.status|tojson }};
+        const pageCount = {{ page_count|tojson }};
         const pageInput = document.getElementById('page-number');
         const saveButton = document.getElementById('save-progress');
         const markFinishedButton = document.getElementById('mark-finished');
@@ -144,10 +144,14 @@
         }
 
         function saveProgress(page, status) {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
+            const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+            if (csrfToken) headers['X-CSRFToken'] = csrfToken;
             return fetch("{{ url_for('update_progress', book_id=book.id) }}", {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({ current_page: page, status: status })
             }).then(response => {
                 if (!response.ok) {

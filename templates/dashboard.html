@@ -147,11 +147,11 @@
                         </a>
                         {% if current_user.is_admin %}
                         <div style="display: flex; gap: 0.25rem;">
-                            <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline" title="Download" style="padding: 0.5rem; flex: 0 0 auto;">
-                                <i class="fa-solid fa-download"></i>
+                            <a href="{{ url_for('uploaded_file', filename=book.file_path) }}" download class="btn btn-outline action-btn" title="Download" aria-label="Download {{ book.title }}">
+                                <i class="fa-solid fa-download"></i> Download
                             </a>
-                            <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline" title="Edit" style="padding: 0.5rem; flex: 0 0 auto;">
-                                <i class="fa-solid fa-pen"></i>
+                            <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-outline action-btn" title="Edit" aria-label="Edit {{ book.title }}">
+                                <i class="fa-solid fa-pen"></i> Edit
                             </a>
                         </div>
                         {% endif %}

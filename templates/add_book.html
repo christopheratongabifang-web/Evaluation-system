@@ -9,34 +9,51 @@
 
     <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="title">Book Title</label>
-            <input type="text" id="title" name="title" class="form-control" required>
+            <label for="title"><i class="fa-solid fa-book me-2 text-primary"></i>Book Title</label>
+            <div class="input-with-icon">
+                <i class="fa-solid fa-book"></i>
+                <input type="text" id="title" name="title" class="form-control" required>
+            </div>
         </div>
         
         <div class="form-group">
-            <label for="author">Author</label>
-            <input type="text" id="author" name="author" class="form-control" required>
+            <label for="author"><i class="fa-solid fa-user-pen me-2 text-primary"></i>Author</label>
+            <div class="input-with-icon">
+                <i class="fa-solid fa-user-pen"></i>
+                <input type="text" id="author" name="author" class="form-control" required>
+            </div>
         </div>
         
         <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" class="form-control" required>
-                <option value="" disabled selected>Select a category</option>
-                {% for cat in categories %}
-                <option value="{{ cat }}" style="background: var(--background); color: var(--text-primary);">{{ cat }}</option>
-                {% endfor %}
-            </select>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <label for="category" style="margin:0;"><i class="fa-solid fa-tags me-2 text-primary"></i>Category</label>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('add_category') }}" class="btn btn-sm btn-outline" style="white-space: nowrap;">Add Category</a>
+                {% endif %}
+            </div>
+            <div class="input-with-icon">
+                <i class="fa-solid fa-tags"></i>
+                <select id="category" name="category" class="form-control" required>
+                    <option value="" disabled selected>Select a category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" style="background: var(--background); color: var(--text-primary);">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
         
         {% if current_user.is_admin %}
         <div class="form-group">
-            <label for="target_class">Target Class</label>
-            <select id="target_class" name="target_class" class="form-control">
-                <option value="All" selected style="background: var(--background); color: var(--text-primary);">All Classes</option>
-                {% for c in academic_classes %}
-                <option value="{{ c.name }}" style="background: var(--background); color: var(--text-primary);">{{ c.display_name }}</option>
-                {% endfor %}
-            </select>
+            <label for="target_class"><i class="fa-solid fa-graduation-cap me-2 text-primary"></i>Target Class</label>
+            <div class="input-with-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <select id="target_class" name="target_class" class="form-control">
+                    <option value="All" selected style="background: var(--background); color: var(--text-primary);">All Classes</option>
+                    {% for c in academic_classes %}
+                    <option value="{{ c.name }}" style="background: var(--background); color: var(--text-primary);">{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
         {% endif %}
         {% if current_user.is_admin %}
@@ -46,11 +63,11 @@
         {% endif %}
         
         <div class="form-group">
-            <label for="file">Upload Book File (PDF, EPUB, etc.)</label>
+            <label for="file"><i class="fa-solid fa-file-arrow-up me-2 text-primary"></i>Upload Book File (PDF, EPUB, etc.)</label>
             <input type="file" id="file" name="file" class="form-control" required style="padding: 0.5rem;">
         </div>
         
-        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Save Book</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;"><i class="fa-solid fa-floppy-disk me-2"></i>Save Book</button>
     </form>
 </div>
 {% endblock %}
