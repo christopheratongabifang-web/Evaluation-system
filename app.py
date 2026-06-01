@@ -3212,4 +3212,4 @@ if __name__ == '__main__':
     import os
     ensure_db_schema()
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    app.run(host='127.0.0.1', port=5000, debug=debug_mode)
+    app.run(host='127.0.0.1', port=5000, debug=False)

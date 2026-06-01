@@ -6,3 +6,5 @@ Werkzeug==3.0.1
 reportlab==4.0.7
 python-docx==0.8.11
 pypdf==4.2.0
+google-generativeai==0.7.2
+mangum==0.17.0
